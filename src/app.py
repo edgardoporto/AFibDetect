@@ -1,4 +1,6 @@
 import streamlit as st
+import sys
+import os
 
 # 1. IMPORTAR NUESTROS PROPIOS MÓDULOS
 # Importamos las funciones de carga y validación que guardamos en data_loader.py

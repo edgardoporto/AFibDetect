@@ -4,7 +4,7 @@ import os
 
 # 1. IMPORTAR NUESTROS PROPIOS MÓDULOS
 # Importamos las funciones de carga y validación que guardamos en data_loader.py
-from src.modules.data_loader import cargar_archivo_csv, validar_estructura_ecg
+from modules.data_loader import cargar_archivo_csv, validar_estructura_ecg
 from src.modules.dashboard import graficar_ecg_crudo
 
 

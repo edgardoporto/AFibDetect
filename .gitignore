@@ -1,0 +1,11 @@
+# Archivos temporales de Python generados solos
+__pycache__/
+*.pyc
+
+# Carpetas de datos y modelos pesados (locales)
+data/
+#models/         # Por ahora se sube, si llega a > 100 MB subirlo a otro server
+
+# Configuraciones locales de VS Code
+.vscode/
+.DS_Store

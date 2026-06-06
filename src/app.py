@@ -30,29 +30,31 @@ if archivo_subido is not None:
 # Inyección de código CSS para reducir el espacio vertical superior
 st.markdown(
     """
-    <style>
-        /* Reduce el margen superior del contenedor principal */
+<style>
+        /* Ajustamos el margen con un espacio de seguridad de 2.5rem para que no se corte el título */
         .block-container {
-            padding-top: 1rem;
+            padding-top: 2.5rem;
             padding-bottom: 0rem;
             margin-top: 0rem;
         }
-        /* Elimina espacios adicionales añadidos por el encabezado por defecto */
-        stHeader {
-            height: 0px;
-            background: transparent;
-        }
-
-        /* Controla el tamaño de los subtítulos de secciones (st.header) */
-        h2 {
-            font-size: 0.9rem !important;
-            padding-top: 0.5rem;
+        
+        /* Reducimos el título a un tamaño compacto y balanceado */
+        h1 {
+            font-size: 2.0rem !important; 
+            font-weight: 700;
+            padding-bottom: 0.2rem;
+            margin-top: 0rem;
         }
         
-        /* Controla el tamaño del texto descriptivo ordinario (st.write) */
+        /* Ajuste de subtítulos */
+        h2 {
+            font-size: 1.5rem !important;
+        }
+        
+        /* Ajuste de textos descriptivos */
         .stText, p {
             font-size: 0.95rem !important;
-        }        
+        }
     </style>
     """,
     unsafe_allow_html=True

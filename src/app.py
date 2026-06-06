@@ -6,6 +6,26 @@ from modules.dashboard import graficar_ecg_crudo
 
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")
 
+# Inyección de código CSS para optimizar el espacio vertical superior
+st.markdown(
+    """
+    <style>
+        /* Reduce el margen superior del contenedor principal */
+        .block-container {
+            padding-top: 1rem;
+            padding-bottom: 0rem;
+            margin-top: 0rem;
+        }
+        /* Elimina espacios adicionales añadidos por el encabezado por defecto */
+        stHeader {
+            height: 0px;
+            background: transparent;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 if "df_ecg" not in st.session_state:
     st.session_state["df_ecg"] = None
 

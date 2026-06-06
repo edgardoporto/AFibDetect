@@ -24,7 +24,7 @@ st.markdown(
 
         /* Controla el tamaño de los subtítulos de secciones (st.header) */
         h2 {
-            font-size: 1.2rem !important;
+            font-size: 0.9rem !important;
             padding-top: 0.5rem;
         }
         

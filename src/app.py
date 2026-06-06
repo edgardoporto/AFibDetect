@@ -54,18 +54,19 @@ if st.session_state["paciente_activo"] is not None:
     with col4:
         st.metric(label="Diagnóstico de Referencia", value=paciente["etiqueta_referencia"])
         
-    # Fila 2: Información Técnica del Archivo y Canales (Organizado en columnas secundarias)
+    # Fila 2: Información Técnica del Archivo y Canales (Estructura corregida)
     st.markdown("###") # Pequeño espacio de separación
     col_tech1, col_tech2, col_tech3 = st.columns(3)
     
     with col_tech1:
-        st.info(f"**Estructura Digital:**\n* **N° de Derivaciones:** {paciente['num_derivaciones']} canales\n* **Puntos Totales por Canal:** {paciente['total_muestras']} muestras")
+        st.info(f"**Estructura Digital:**\n\n* **N° de Derivaciones:** {paciente['num_derivaciones']} canales\n* **Puntos Totales:** {paciente['total_muestras']} muestras")
     
     with col_tech2:
-        st.info(f"**Especificaciones del Convertidor (ADC):**\n* **Resolución:** {paciente['resolución_adc']}\n* **Ganancia Digital:** {paciente['ganancia_base']}")
+        st.info(f"**Convertidor Análogo-Digital (ADC):**\n\n* **Resolución:** {paciente['resolución_adc']}\n* **Ganancia Base:** {paciente['ganancia_base']}")
         
     with col_tech3:
-        st.info(f"**Formato de Archivo:**\n* **Módulo Lector:** {paciente['formato_almacenamiento']}\n* **Datos Clínicos Extrayibles:** {paciente['metadatos_clinicos']}")
+        st.info(f"**Formato de Almacenamiento:**\n\n* **Módulo Lector:** {paciente['formato_almacenamiento']}\n* **Datos Clínicos:** {paciente['metadatos_clinicos']}")
+    
 
     # Despliegue explícito del mapa de derivaciones presentes
     st.markdown("**Matriz de Canales Detectados:**")

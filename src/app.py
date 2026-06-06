@@ -2,10 +2,16 @@ import streamlit as st
 import sys
 import os
 
+# 1. AJUSTE DE RUTAS PARA COMPATIBILIDAD LOCAL Y NUBE
+# Añadimos dinámicamente la carpeta contenedora al PATH de Python
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
 # 1. IMPORTAR NUESTROS PROPIOS MÓDULOS
 # Importamos las funciones de carga y validación que guardamos en data_loader.py
 from modules.data_loader import cargar_archivo_csv, validar_estructura_ecg
-from src.modules.dashboard import graficar_ecg_crudo
+from modules.dashboard import graficar_ecg_crudo
 
 
 # Inicialización y configuración estética de la página web

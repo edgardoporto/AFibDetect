@@ -6,7 +6,7 @@ from modules.dashboard import graficar_ecg_crudo
 
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")
 
-# Inyección de código CSS para optimizar el espacio vertical superior
+# Inyección de código CSS para reducir el espacio vertical superior
 st.markdown(
     """
     <style>
@@ -21,6 +21,17 @@ st.markdown(
             height: 0px;
             background: transparent;
         }
+
+        /* Controla el tamaño de los subtítulos de secciones (st.header) */
+        h2 {
+            font-size: 1.6rem !important;
+            padding-top: 0.5rem;
+        }
+        
+        /* Controla el tamaño del texto descriptivo ordinario (st.write) */
+        .stText, p {
+            font-size: 0.95rem !important;
+        }        
     </style>
     """,
     unsafe_allow_html=True

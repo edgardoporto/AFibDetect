@@ -9,20 +9,18 @@ if "paciente_activo" not in st.session_state:
 
 # Título Principal
 st.title("🩺 AFibDetect v1.0")
-st.write("Cargue los archivos binarios (.hea y .dat) de un registro CPSC-2018 para su análisis.")
+st.write("Cargue los archivos de un registro de la CPSC-2018 (Arrastre juntos el archivo de texto .hea y la matriz de señal .mat).")
 
-# 1. COMPONENTE DE CARGA DE ARCHIVOS (GUI)
-# Modificado para aceptar múltiples archivos y filtrar por las extensiones de PhysioNet
+# 1. COMPONENTE DE CARGA DE ARCHIVOS CORREGIDO (.hea y .mat)
 archivos_subidos = st.file_uploader(
-    "Seleccione o arrastre juntos los archivos .hea y .dat del registro:", 
-    type=["hea", "dat"], 
+    "Seleccione o arrastre juntos los archivos .hea y .mat del registro:", 
+    type=["hea", "mat"], # <-- CORRECCIÓN AQUÍ: Cambiado de 'dat' a 'mat'
     accept_multiple_files=True
 )
 
-# Simulador temporal de datos para ver la GUI bonita antes de conectar el lector real
+# Simulador temporal de datos para ver la GUI bonita
 if archivos_subidos and len(archivos_subidos) == 2:
     if st.session_state["paciente_activo"] is None:
-        # Simulamos que leímos con éxito el registro A0001 para poder diseñar la interfaz
         st.session_state["paciente_activo"] = {
             "id_registro": "A0001",
             "frecuencia_muestreo": 300,
@@ -32,18 +30,15 @@ if archivos_subidos and len(archivos_subidos) == 2:
         }
         st.success("Validación e ingesta biomédica completada con éxito.")
 
-# 2. DESPLIEGUE DE METADATOS (Solo si el paciente ya está cargado en memoria)
+# 2. DESPLIEGUE DE METADATOS
 if st.session_state["paciente_activo"] is not None:
     st.markdown("---")
     st.subheader("📊 Metadatos del Registro Seleccionado")
     
-    # Extraemos el perfil del paciente activo
     paciente = st.session_state["paciente_activo"]
-    
-    # Calculamos la duración teórica (Muestras / Frecuencia)
     duracion_segundos = paciente["total_muestras"] / paciente["frecuencia_muestreo"]
     
-    # Creamos 4 columnas visuales bonitas para presentar los datos clave
+    # Renderizado en tarjetas métricas elegantes
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -58,14 +53,12 @@ if st.session_state["paciente_activo"] is not None:
     st.markdown("---")
     st.subheader("📈 Visualización de Derivaciones")
     
-    # Selector desplegable para que el usuario elija cuál de las 12 derivaciones inspeccionar
     derivacion_seleccionada = st.selectbox(
         "Seleccione la derivación electrocardiográfica a graficar:", 
         paciente["derivaciones"],
-        index=1  # Preselecciona la derivación II por defecto
+        index=1  # Preselecciona la derivación II
     )
     
-    # AQUÍ CONECTAREMOS EL GRÁFICO EN EL SIGUIENTE PASO
     st.info(f"Listo para renderizar la señal de la derivación {derivacion_seleccionada}...")
 
 # 3. INYECCIÓN DE CÓDIGO CSS (Márgenes y Fuentes)

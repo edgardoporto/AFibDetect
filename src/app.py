@@ -2,11 +2,14 @@ import streamlit as st
 import sys
 import os
 
-# 1. AJUSTE DE RUTAS PARA COMPATIBILIDAD LOCAL Y NUBE
-# Añadimos dinámicamente la carpeta contenedora al PATH de Python
-current_dir = os.path.dirname(os.path.abspath(__file__))
-if current_dir not in sys.path:
-    sys.path.append(current_dir)
+# 1. SOLUCIÓN ABSOLUTA DE ENRUTAMIENTO (Inyección en el Python Path)
+# Obtenemos la ruta absoluta de la carpeta 'src' donde viven tus módulos
+root_path = os.path.dirname(os.path.abspath(__file__))
+
+# Le decimos a Python que busque módulos directamente dentro de 'src'
+if root_path not in sys.path:
+    sys.path.insert(0, root_path)
+    
 
 # 1. IMPORTAR NUESTROS PROPIOS MÓDULOS
 # Importamos las funciones de carga y validación que guardamos en data_loader.py

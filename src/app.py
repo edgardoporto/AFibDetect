@@ -6,6 +6,8 @@ from config import SNOMED_MAP
 from modules.data_loader import cargar_registro_unico_wfdb
 from modules.dashboard import graficar_derivacion_ecg, graficar_comparativa_preprocesamiento
 from modules.preprocessor import ejecutar_pipeline_preprocesamiento
+from modules.inference import ejecutar_inferencia_segmentos
+
 
 # Inicialización y configuración del Layout
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")
@@ -210,14 +212,66 @@ elif menu_opcion == "2. Preprocesamiento":
 # ==============================================================================
 # PANTALLA 3: INFERENCIA Y DASHBOARD (MARCO DE TRABAJO PARA EL SIGUIENTE PASO)
 # ==============================================================================
+# ==============================================================================
+# PANTALLA 3: INFERENCIA Y DASHBOARD (DISEÑO CENTRALIZADO)
+# ==============================================================================
 elif menu_opcion == "3. Inferencia y Dashboard":
     st.header("📊 Tablero de Control Estadístico y Diagnóstico")
-    st.write("Resultados de clasificación computacional por clase y analítica de explicabilidad (XAI).")
+    st.write("Evaluación computacional por segmentos temporales a través del clasificador profundo de arritmias.")
     
+    # Bloque de seguridad de software: Verifica que existan tensores preprocesados
     if st.session_state["datos_preprocesados"] is not None:
-        st.info("Estructura de tensores de 250 Hz lista en sesión. Módulo preparado para el acoplamiento del clasificador.")
+        proc = st.session_state["datos_preprocesados"]
+        paciente = st.session_state["paciente_activo"]
+        
+        st.markdown("---")
+        st.markdown("### 🧠 Clasificación Computacional del Registro")
+        st.write(f"El sistema alimentará el modelo utilizando los **{proc['cantidad_segmentos']} segmentos** de 10 segundos extraídos de la **Derivación {proc['derivacion_procesada']}**.")
+        
+        # BOTÓN CENTRAL DE ACCIÓN PARA LA INFERENCIA
+        if st.button("🧠 Ejecutar Inferencia Computacional", type="primary"):
+            with st.spinner("Inyectando tensores en la arquitectura del modelo..."):
+                # Ejecutamos el motor analítico pasándole las ventanas y la etiqueta real
+                predicciones_calculadas = ejecutar_inferencia_segmentos(
+                    lista_segmentos=proc["lista_segmentos"],
+                    etiqueta_referencia_global=paciente["etiqueta_referencia"]
+                )
+                # Guardamos los resultados de la red en la memoria de la sesión
+                st.session_state["resultados_inferencia"] = predicciones_calculadas
+                st.success("🤖 Clasificación completada de forma exitosa sobre el registro continuo.")
+                
+        # Si el usuario ya presionó el botón y las predicciones existen, desplegamos la tabla analítica
+        if "resultados_inferencia" in st.session_state and st.session_state["resultados_inferencia"] is not None:
+            st.markdown("###")
+            st.subheader("📋 Reporte Diagnóstico por Segmento (Ventanas de 10s)")
+            
+            # Formateamos los diccionarios como una tabla/DataFrame estético para el usuario
+            import pandas as pd
+            df_reporte = pd.DataFrame(st.session_state["resultados_inferencia"])
+            
+            # Renombramos las columnas para que luzcan formales en la pantalla
+            df_reporte.columns = ["Segmento", "Diagnóstico Predicho", "Prob NSR", "Prob AF", "Prob Other", "Prob Noise"]
+            
+            # Desplegamos la tabla interactiva de alta densidad informativa
+            st.dataframe(
+                df_reporte.style.format({
+                    "Prob NSR": "{:.4f}",
+                    "Prob AF": "{:.4f}",
+                    "Prob Other": "{:.4f}",
+                    "Prob Noise": "{:.4f}"
+                }),
+                use_container_width=True,
+                hide_index=True
+            )
+            
     else:
         st.warning("⚠️ Falta completar pasos previos. Asegúrese de haber cargado el archivo en el Módulo 1 y haber presionado el botón de preprocesamiento en el Módulo 2.")
+
+
+
+
+
+
 
 # 4. INYECCIÓN DE CÓDIGO CSS (Control estético de fuentes y márgenes)
 st.markdown(

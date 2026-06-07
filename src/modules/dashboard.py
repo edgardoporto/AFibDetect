@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 import streamlit as st
 import numpy as np
+from plotly.subplots import make_subplots
 
 def graficar_derivacion_ecg(paciente, nombre_derivacion):
     """
@@ -39,54 +40,19 @@ def graficar_derivacion_ecg(paciente, nombre_derivacion):
 
 
 
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import streamlit as st
-import numpy as np
-
-
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import streamlit as st
-import numpy as np
-
-
-
-
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import streamlit as st
-import numpy as np
-
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import streamlit as st
-import numpy as np
-
-
-
-
-
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import streamlit as st
-import numpy as np
-
 def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_procesado, senal_procesada, nombre_lead, fs_original=500, fs_nueva=250):
     """
-    Genera un gráfico interactivo con doble eje Y, asegurando compatibilidad absoluta
-    con el servidor al limpiar la sintaxis del layout y ajustando los márgenes del título.
+    Genera un gráfico interactivo con doble eje Y, mostrando la totalidad de la señal
+    disponible (todos los segmentos obtenidos) a lo ancho de la pantalla.
     """
-    muestras_10s_crudo = int(10 * fs_original)     # 5000 muestras a 500 Hz
-    muestras_10s_procesado = int(10 * fs_nueva)   # 2500 muestras a 250 Hz
-    
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # CAPA 1 (FONDO): TRAZA ROJA EN LÍNEA CONTINUA
+    # CAPA 1 (FONDO): TRAZA ROJA EN LÍNEA CONTINUA (Señal Cruda Completa)
+    # Removemos los recortes numéricos para que lea el vector entero
     fig.add_trace(
         go.Scatter(
-            x=tiempo_crudo[:muestras_10s_crudo],
-            y=senal_cruda[:muestras_10s_crudo],
+            x=tiempo_crudo,
+            y=senal_cruda,
             mode='lines',
             name=f'ECG Crudo Original ({fs_original} Hz)',
             line=dict(color='#FCA5A5', width=1.1)
@@ -94,11 +60,12 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
         secondary_y=False
     )
     
-    # CAPA 2 (PRIMER PLANO): TRAZA VERDE
+    # CAPA 2 (PRIMER PLANO): TRAZA VERDE (Señal Procesada Completa)
+    # Muestra los 2 segmentos continuos uno detrás del otro de forma fluida
     fig.add_trace(
         go.Scatter(
-            x=tiempo_procesado[:muestras_10s_procesado],
-            y=senal_procesada[:muestras_10s_procesado],
+            x=tiempo_procesado,
+            y=senal_procesada,
             mode='lines',
             name=f'ECG Procesado Destino ({fs_nueva} Hz)',
             line=dict(color='#2ECC71', width=1.4)
@@ -106,17 +73,16 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
         secondary_y=True
     )
     
-    # Configuración de Layout Estándar de Plotly (Sin propiedades conflictivas de modebar)
+    # Configuración de Layout Estándar de Plotly
     fig.update_layout(
-        title=f"Impacto del Pipeline de Preprocesamiento — Derivación {nombre_lead} (Primeros 10 Segundos)",
+        title=f"Impacto del Pipeline de Preprocesamiento — Derivación {nombre_lead} (Registro Completo)",
         xaxis_title="Tiempo (Segundos)",
         template="plotly_white",
         height=440,
-        # Ampliamos el margen superior a 90 para separar el título de los íconos de forma segura
         margin=dict(l=40, r=40, t=90, b=40), 
         hovermode="x unified",
         
-        # Leyenda horizontal en la parte inferior externa del gráfico
+        # Leyenda horizontal en la parte inferior externa
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -130,16 +96,16 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
     fig.update_yaxes(title_text="<b>Amplitud Cruda (Voltaje Original)</b>", secondary_y=False, color='#E53E3E')
     fig.update_yaxes(title_text="<b>Amplitud Normalizada (Z-score)</b>", secondary_y=True, color='#2ECC71')
     
-    # Configuración de interacción (Se pasa de forma externa y segura a st.plotly_chart)
+    # Configuración de interacción del lienzo
     config_grafico = {
-        'displayModeBar': True, # Fuerza la barra de herramientas a estar siempre visible
+        'displayModeBar': True,
         'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
         'toImageButtonOptions': {
-            'format': 'png', # Exportación de alta definición para figuras de tu paper Q1
+            'format': 'png',
             'filename': f'comparativa_preproc_lead_{nombre_lead}',
             'height': 500,
             'width': 1000,
-            'scale': 2 # Duplica la resolución para impresión científica
+            'scale': 2
         }
     }
     

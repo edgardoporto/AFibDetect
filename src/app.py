@@ -103,20 +103,19 @@ if st.session_state["paciente_activo"] is not None:
 
     st.markdown("---")
     st.subheader("📈 Visualización Interactiva Multiderivación")
-    st.write("Seleccione las derivaciones electrocardiográficas que desea inspeccionar en paralelo:")
+    st.write("Seleccione los canales electrocardiográficos que desea inspeccionar en paralelo:")
     
-    # 1. DISEÑO DE LA MATRIZ DE CHECKBOXS (Distribuidos en 6 columnas estéticas)
-    # Creamos un contenedor de columnas para que los checkboxs no se desparramen hacia abajo
+    # 1. DISEÑO DE LA MATRIZ COMPACTA (Solo las siglas de los canales)
     cols_check = st.columns(6)
     derivaciones_seleccionadas = []
     
-    # Iteramos sobre las 12 derivaciones del paciente y las repartimos en las 6 columnas
     for idx, derivacion in enumerate(paciente["derivaciones"]):
-        col_actual = cols_check[idx % 6] # Distribución matemática uniforme (2 por columna)
+        col_actual = cols_check[idx % 6]
         with col_actual:
-            # st.checkbox devuelve True si está marcado. Inicialmente seteado en False.
-            if st.checkbox(f"Derivación {derivacion}", value=False, key=f"chk_{derivacion}"):
+            # CORRECCIÓN: Eliminamos la palabra 'Derivación ' del texto visual para mayor compacidad
+            if st.checkbox(derivacion, value=False, key=f"chk_{derivacion}"):
                 derivaciones_seleccionadas.append(derivacion)
+
                 
     # 2. RENDERIZADO REACTIVO DE GRÁFICOS (Abajo de la matriz)
     if derivaciones_seleccionadas:

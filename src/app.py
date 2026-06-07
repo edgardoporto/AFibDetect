@@ -33,6 +33,9 @@ with st.sidebar:
     )
     st.markdown("---")
     st.caption("Arquitectura modular para la clasificación de arritmias.")
+    st.caption("Edgard Oporto")
+    st.caption("UNMSM 2026")
+
 
 def traducir_codigo_snomed(codigo_crudo):
     codigo_str = str(codigo_crudo).strip()

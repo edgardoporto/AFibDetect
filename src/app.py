@@ -70,7 +70,7 @@ with tab1:
     
     modo_ingreso = st.radio(
         "Método de Ingesta:",
-        ["🔬 Cargar Archivos Propios (.hea + .mat)", "🚀 Usar Registro de Demostración (Para Pruebas Rápidas)"],
+        ["🔬 Cargar registros (.mat + .hea)", "🚀 Usar registro de demostración"],
         horizontal=True,
         key="modo_ingreso_global"
     )

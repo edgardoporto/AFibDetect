@@ -7,6 +7,7 @@ from modules.data_loader import cargar_registro_unico_wfdb
 from modules.dashboard import graficar_derivacion_ecg, graficar_comparativa_preprocesamiento
 from modules.preprocessor import ejecutar_pipeline_preprocesamiento
 from modules.inference import ejecutar_inferencia_segmentos
+from modules.dashboard import graficar_derivacion_ecg, graficar_comparativa_preprocesamiento, graficar_ecg_coloreado_por_clase
 
 
 # Inicialización y configuración del Layout
@@ -264,6 +265,23 @@ elif menu_opcion == "3. Inferencia y Dashboard":
                 hide_index=True
             )
             
+            # --- NUEVO COMPONENTE: MAPA DE CLASIFICACIÓN COLOREADO ---
+            st.markdown("###")
+            
+            # Construimos el eje de tiempo a 250 Hz para la señal continua procesada
+            tiempo_procesado = np.arange(len(proc["senal_continua_procesada"])) / proc["fs_nueva"]
+            
+            # Invocamos la función del dashboard pasándole los datos y las predicciones calculadas
+            graficar_ecg_coloreado_por_clase(
+                tiempo_procesado=tiempo_procesado,
+                senal_procesada=proc["senal_continua_procesada"],
+                resultados_inferencia=st.session_state["resultados_inferencia"],
+                fs_nueva=proc["fs_nueva"]
+            )
+            # --------------------------------------------------------
+
+
+
     else:
         st.warning("⚠️ Falta completar pasos previos. Asegúrese de haber cargado el archivo en el Módulo 1 y haber presionado el botón de preprocesamiento en el Módulo 2.")
 

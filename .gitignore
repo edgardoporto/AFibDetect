@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 
 # Carpetas de datos y modelos pesados (locales)
-data/
+#data/
 #models/         # Por ahora se sube, si llega a > 100 MB subirlo a otro server
 
 # Configuraciones locales de VS Code

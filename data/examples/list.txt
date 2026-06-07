@@ -1,0 +1,22 @@
+ El volumen de la unidad F es DATABASE
+ El n£mero de serie del volumen es: 9615-2415
+
+ Directorio de f:\DOCTORADO\ Ciclos\Ciclo 5\02 Direcci¢n de Tesis IV\ APORTE\App\AFibDetect\data\examples
+
+07/06/2026  00:22    <DIR>          .
+07/06/2026  00:07    <DIR>          ..
+15/06/2020  08:24               633 A2020_Others.hea
+15/06/2020  08:24           516,024 A2020_Others.mat
+15/06/2020  08:24               637 A2225_NSR.hea
+15/06/2020  08:24           528,024 A2225_NSR.mat
+15/06/2020  08:24               650 A3561_AF.hea
+15/06/2020  08:24           516,024 A3561_AF.mat
+15/06/2020  08:25               611 A4790_NSR.hea
+15/06/2020  08:25           720,024 A4790_NSR.mat
+15/06/2020  08:25               635 A5618_Others.hea
+15/06/2020  08:25           888,024 A5618_Others.mat
+15/06/2020  08:25               652 A6850_AF.hea
+15/06/2020  08:25           852,024 A6850_AF.mat
+07/06/2026  00:22                 0 list.txt
+              13 archivos      4,023,962 bytes
+               2 dirs  154,341,404,672 bytes libres

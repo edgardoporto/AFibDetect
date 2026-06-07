@@ -36,10 +36,10 @@ with st.sidebar:
     st.markdown("👨‍⚕️ **Investigador**<br>Edgard Oporto", unsafe_allow_html=True)
     st.markdown("###") # Separador intermedio limpio
     
-    st.markdown("🏫 **Institucion**<br>UNMSM FISI 2026", unsafe_allow_html=True)
+    st.markdown("🏫 **Institución**<br>UNMSM FISI 2026", unsafe_allow_html=True)
     st.markdown("###")
     
-    st.markdown("🎓 **Grado Academico**<br>Doctorado en Ingenieria de Sistemas e Informatica", unsafe_allow_html=True)
+    st.markdown("🎓 **Grado Académico**<br>Doctorado en Ingeniería de Sistemas e Informática", unsafe_allow_html=True)
 
 
 

@@ -109,3 +109,67 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
     }
     
     st.plotly_chart(fig, use_container_width=True, key=f"comp_{nombre_lead}", config=config_grafico)
+
+
+def graficar_ecg_coloreado_por_clase(tiempo_procesado, senal_procesada, resultados_inferencia, fs_nueva=250, duracion_ventana_seg=10):
+    """
+    Grafica la señal continua dividida en ventanas de 10 segundos, pintando cada tramo
+    con el color específico del diagnóstico predicho por la Inteligencia Artificial.
+    """
+    import plotly.graph_objects as go
+    import streamlit as st
+    
+    puntos_por_ventana = int(duracion_ventana_seg * fs_nueva) # 2500 muestras
+    total_muestras = len(senal_procesada)
+    
+    # Definimos la paleta de colores clínicos estandarizada del proyecto
+    paleta_colores = {
+        "NSR": "#2ECC71",    # Verde Clínico (Ritmo Normal)
+        "AF": "#E74C3C",     # Rojo Médico (Fibrilación Auricular)
+        "Other": "#3498DB",  # Azul Informativo (Otras Arritmias)
+        "Noise": "#95A5A6"   # Gris (Señal Contaminada)
+    }
+    
+    fig = go.Figure()
+    
+    # Iteramos bloque por bloque sobre la señal continua
+    for idx, i in enumerate(range(0, total_muestras, puntos_por_ventana)):
+        inicio = i
+        fin = min(i + puntos_por_ventana, total_muestras)
+        
+        # Extraemos el fragmento de datos correspondiente a esta ventana
+        fragmento_senal = senal_procesada[inicio:fin]
+        tiempo_fragmento = tiempo_procesado[inicio:fin]
+        
+        # Buscamos qué predijo el modelo para este número de segmento exacto
+        # Si por alguna razón no hay predicción, usamos 'NSR' por defecto de seguridad
+        clase_predicha = "NSR"
+        if idx < len(resultados_inferencia):
+            clase_predicha = resultados_inferencia[idx]["diagnostico_ganador"]
+            
+        color_tramo = paleta_colores.get(clase_predicha, "#95A5A6")
+        
+        # Añadimos la línea de este segmento al lienzo con su color respectivo
+        fig.add_trace(go.Scatter(
+            x=tiempo_fragmento,
+            y=fragmento_senal,
+            mode='lines',
+            name=f"Ventana {idx+1}: {clase_predicha}",
+            line=dict(color=color_tramo, width=1.5),
+            # Agrupamos los elementos en la leyenda de Plotly de forma limpia
+            legendgroup=clase_predicha,
+            showlegend=True if idx == 0 or idx == 1 else False # Evita duplicar nombres repetidos en la leyenda
+        ))
+        
+    fig.update_layout(
+        title="📋 Mapa de Clasificación Temporal (ECG Segmentado y Coloreado por la IA)",
+        xaxis_title="Tiempo (Segundos)",
+        yaxis_title="Amplitud Normalizada (Z-score)",
+        template="plotly_white",
+        height=400,
+        margin=dict(l=40, r=40, t=60, b=40),
+        hovermode="x unified",
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5)
+    )
+    
+    st.plotly_chart(fig, use_container_width=True, key="plot_diagnostico_coloreado")

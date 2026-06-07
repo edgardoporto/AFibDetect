@@ -58,10 +58,15 @@ import plotly.graph_objects as go
 import streamlit as st
 import numpy as np
 
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+import streamlit as st
+import numpy as np
+
 def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_procesado, senal_procesada, nombre_lead, fs_original=500, fs_nueva=250):
     """
     Genera un gráfico interactivo con doble eje Y, asegurando que el ECG procesado
-    esté en primer plano, el crudo como traza continua detrás, y los íconos limpios.
+    esté en primer plano, el crudo como traza continua detrás, y los íconos estables.
     """
     muestras_10s_crudo = int(10 * fs_original)     # 5000 muestras a 500 Hz
     muestras_10s_procesado = int(10 * fs_nueva)   # 2500 muestras a 250 Hz
@@ -69,62 +74,39 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
     # CAPA 1 (FONDO): TRAZA ROJA EN LÍNEA CONTINUA
-    # Al declararse primero, Python la dibuja atrás en el lienzo digital
     fig.add_trace(
         go.Scatter(
             x=tiempo_crudo[:muestras_10s_crudo],
             y=senal_cruda[:muestras_10s_crudo],
             mode='lines',
             name=f'ECG Crudo Original ({fs_original} Hz)',
-            line=dict(color='#FCA5A5', width=1.1) # <-- CORREGIDO: Trazo continuo suave
+            line=dict(color='#FCA5A5', width=1.1)
         ),
         secondary_y=False
     )
     
-    # CAPA 2 (PRIMER PLANO): TRAZA VERDE EN LÍNEA CONTINUA ENFÁTICA
-    # Al declararse después, se sobrepone de forma limpia sobre los trazos que coincidan
+    # CAPA 2 (PRIMER PLANO): TRAZA VERDE
     fig.add_trace(
         go.Scatter(
             x=tiempo_procesado[:muestras_10s_procesado],
             y=senal_procesada[:muestras_10s_procesado],
             mode='lines',
             name=f'ECG Procesado Destino ({fs_nueva} Hz)',
-            line=dict(color='#2ECC71', width=1.4) # Verde nítido predominante
+            line=dict(color='#2ECC71', width=1.4)
         ),
         secondary_y=True
     )
     
-    # Configuración avanzada del Layout arquitectural
+    # Configuración avanzada del Layout
     fig.update_layout(
         title=f"Impacto del Pipeline de Preprocesamiento — Derivación {nombre_lead} (Primeros 10 Segundos)",
         xaxis_title="Tiempo (Segundos)",
         template="plotly_white",
         height=440,
-        margin=dict(l=40, r=40, t=80, b=40), # <-- AJUSTE: Ampliamos margen superior para los íconos
+        margin=dict(l=40, r=40, t=80, b=40), # Margen superior amplio para los íconos
         hovermode="x unified",
         
-        # Reubicación estética de la leyenda horizontal abajo
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.25,
-            xanchor="center",
-            x=0.5
-        )
-    )
-    
-
-
-    # Configuración avanzada del Layout arquitectural
-    fig.update_layout(
-        title=f"Impacto del Pipeline de Preprocesamiento — Derivación {nombre_lead} (Primeros 10 Segundos)",
-        xaxis_title="Tiempo (Segundos)",
-        template="plotly_white",
-        height=440,
-        margin=dict(l=40, r=40, t=80, b=40), # Mantenemos el margen de 80 para que el título respire
-        hovermode="x unified",
-        
-        # Reubicación estética de la leyenda horizontal abajo
+        # Leyenda horizontal abajo
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -133,22 +115,14 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
             x=0.5
         ),
         
-        # --- SOLUCIÓN DE LA BARRA DE HERRAMIENTAS ---
-        # Forzamos a que la barra esté SIEMPRE visible de forma horizontal y la bajamos
-        config={
-            'displayModeBar': True, # Fuerza la visibilidad permanente (no solo al pasar el mouse)
-            'modeBarButtonsToRemove': ['lasso2d', 'select2d'], # Quitamos botones inútiles de mapas
-        }
-    )
-    
-    # Bajamos la barra de herramientas 40 píxeles para que flote debajo del título de forma horizontal
-    fig.update_layout(
+        # Ajuste de la barra de herramientas: Horizontal y posicionada debajo del título
         modebar=dict(
-            orientation='h',        # Configuración Horizontal limpia
-            y=0.92,                 # Altura exacta: justo arriba de la gráfica, pero debajo del título
-            x=0.98,                 # Alineado a la derecha de la cuadrícula
+            orientation='h',
+            y=0.95,                 # Desplazamiento vertical debajo del título
+            x=1.0,                  # Pegado a la esquina derecha
             yanchor='top',
-            xanchor='right'
+            xanchor='right',
+            bgcolor='rgba(0,0,0,0)'
         )
     )
     
@@ -156,5 +130,10 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
     fig.update_yaxes(title_text="<b>Amplitud Cruda (Voltaje Original)</b>", secondary_y=False, color='#E53E3E')
     fig.update_yaxes(title_text="<b>Amplitud Normalizada (Z-score)</b>", secondary_y=True, color='#2ECC71')
     
-    st.plotly_chart(fig, use_container_width=True, key=f"comp_{nombre_lead}")
-
+    # --- CONFIGURACIÓN CORRECTA: Pasamos la configuración de visibilidad dentro de st.plotly_chart ---
+    config_grafico = {
+        'displayModeBar': True, # Fuerza la barra de herramientas a estar siempre visible
+        'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+    }
+    
+    st.plotly_chart(fig, use_container_width=True, key=f"comp_{nombre_lead}", config=config_grafico)

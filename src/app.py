@@ -169,21 +169,40 @@ elif menu_opcion == "2. Preprocesamiento":
                 
             st.info(f"💡 Cada uno de los **{proc['cantidad_segmentos']} segmentos** cuenta con un vector exacto de **2,500 puntos de datos** (250 Hz x 10s) con Media = 0 y Varianza = 1, listos para la inyección de tensores.")
             
-            # Construimos los vectores de tiempo para pasárselos a Plotly
+
+# 1. PRIMERO CALCULAMOS LOS VECTORES Y VALORES EN MEMORIA
             idx_ii = paciente["derivaciones"].index("II")
             senal_cruda_ii = paciente["senal_cruda"][idx_ii]
             tiempo_crudo = np.arange(len(senal_cruda_ii)) / paciente["frecuencia_muestreo"]
             
+            # Calculamos la duración máxima ANTES de llamarla en el Slider
+            duracion_maxima_segundos = float(len(proc["senal_continua_procesada"]) / proc["fs_nueva"])
             tiempo_procesado = np.arange(len(proc["senal_continua_procesada"])) / proc["fs_nueva"]
             
-            # Pintamos la gráfica comparativa real
+            st.markdown("###")
+            st.subheader("🎛️ Selector de Ventana Temporal")
+            st.write("Desplace el controlador para aislar e inspeccionar un tramo específico del registro continuo:")
+            
+            # 2. AHORA SÍ CREAMOS EL SLIDER (Ya conoce 'duracion_maxima_segundos')
+            intervalo_seleccionado = st.slider(
+                "Intervalo de inspección (Segundos):",
+                min_value=0.0,
+                max_value=duracion_maxima_segundos,
+                value=(0.0, min(10.0, duracion_maxima_segundos)),
+                step=0.5
+            )
+            
+            # 3. FINALMENTE PINTAMOS EL GRÁFICO COMPARATIVO
             graficar_comparativa_preprocesamiento(
                 tiempo_crudo=tiempo_crudo,
                 senal_cruda=senal_cruda_ii,
                 tiempo_procesado=tiempo_procesado,
                 senal_procesada=proc["senal_continua_procesada"],
-                nombre_lead="II"
+                nombre_lead="II",
+                intervalo_tiempo=intervalo_seleccionado
             )
+
+
             
     else:
         st.warning("⚠️ No se han detectado datos en la memoria RAM del servidor. Por favor, regrese al Módulo 1 e ingrese un registro biomédico válido primero.")

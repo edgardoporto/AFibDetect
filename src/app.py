@@ -1,7 +1,8 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 
-# 1. IMPORTACIÓN DE CONFIGURACIONES Y MÓDULOS DE PROCESAMIENTO
+# 1. IMPORTACIÓN DE CONFIGURACIONES Y MÓDULOS DEL PIPELINE
 from config import SNOMED_MAP
 from modules.data_loader import cargar_registro_unico_wfdb, cargar_registro_ejemplo_interno
 from modules.dashboard import graficar_derivacion_ecg, graficar_comparativa_preprocesamiento, graficar_ecg_coloreado_por_clase
@@ -9,34 +10,28 @@ from modules.preprocessor import ejecutar_pipeline_preprocesamiento
 from modules.inference import ejecutar_inferencia_segmentos
 from modules.report_generator import generar_pdf_clinico
 
-
-# Inicialización y configuración del Layout
+# Configuración estética global del Layout
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")
 
-# 2. GESTIÓN DE ESTADO (In-Memory State Management)
+# 2. GESTIÓN DE ESTADO EN MEMORIA RAM EFÍMERA
 if "paciente_activo" not in st.session_state:
     st.session_state["paciente_activo"] = None
 
 if "datos_preprocesados" not in st.session_state:
     st.session_state["datos_preprocesados"] = None
 
-# 3. INTERFAZ DE USUARIO: BARRA LATERAL (Menú de Navegación Estricto)
+if "resultados_inferencia" not in st.session_state:
+    st.session_state["resultados_inferencia"] = None
+
+# 3. INTERFAZ DE USUARIO: BARRA LATERAL (INFORMACIÓN INSTITUCIONAL FIJA)
 with st.sidebar:
     st.title("🩺 AFibDetect v1.0")
     st.markdown("---")
-    st.markdown("### Flujo de Trabajo")
-    
-    # El menú izquierdo solo sirve como selector de pestañas del sistema
-    menu_opcion = st.radio(
-        "Seleccione un módulo:",
-        ["1. Carga de Señal", "2. Preprocesamiento", "3. Inferencia"]
-    )
+    st.markdown("**Modelo en cascada para la clasificación de AFib, NSR, Others y Noise.**")
     st.markdown("---")
-    st.caption("Modelo en cascada para la clasificación de AFib, NSR, Others y Noise.")
-    st.caption("Edgard Oporto")
-    st.caption("UNMSM FISI 2026")
-    st.caption("Doctorado en Ingeniería de Sistemas e Informática")
-
+    st.caption("👨‍⚕️ **Investigador:** Edgard Oporto")
+    st.caption("🏫 **Institución:** UNMSM FISI 2026")
+    st.caption("🎓 **Grado:** Doctorado en Ingeniería de Sistemas e Informática")
 
 def traducir_codigo_snomed(codigo_crudo):
     codigo_str = str(codigo_crudo).strip()
@@ -45,17 +40,21 @@ def traducir_codigo_snomed(codigo_crudo):
         return nombre_real if nombre_real in ["AF", "NSR", "Noise"] else f"Other ({nombre_real})"
     return "Other (Unknown)"
 
+# 4. CONFIGURACIÓN DE PESTAÑAS CENTRALES DE ALTA PERSISTENCIA (MIGRACIÓN DE RADIO A TABS)
+tab1, tab2, tab3 = st.tabs(["📥 1. Carga de Señal", "⚡ 2. Preprocesamiento", "📊 3. Inferencia"])
+
 # ==============================================================================
-# PANTALLA 1: MODULO DE INGRESO Y VALIDACIÓN DE DATOS (VERSION HÍBRIDA)
+# PESTAÑA 1: MODULO DE INGRESO Y VALIDACIÓN DE DATOS
 # ==============================================================================
-if menu_opcion == "1. Carga de Señal":
-    st.header("📥 Módulo de Ingreso y Validation de Datos")
+with tab1:
+    st.header("📥 Módulo de Ingreso y Validación de Datos")
     st.write("Seleccione el método de ingreso de datos electrocardiográficos de la CPSC-2018:")
     
     modo_ingreso = st.radio(
         "Método de Ingesta:",
         ["🔬 Cargar Archivos Propios (.hea + .mat)", "🚀 Usar Registro de Demostración (Para Pruebas Rápidas)"],
-        horizontal=True
+        horizontal=True,
+        key="modo_ingreso_global"
     )
     
     st.markdown("###") 
@@ -64,7 +63,8 @@ if menu_opcion == "1. Carga de Señal":
         archivos_subidos = st.file_uploader(
             "Seleccione o arrastre juntos los archivos .hea y .mat del registro:", 
             type=["hea", "mat"],
-            accept_multiple_files=True
+            accept_multiple_files=True,
+            key="uploader_archivos_propios"
         )
 
         if archivos_subidos and len(archivos_subidos) == 2:
@@ -81,6 +81,7 @@ if menu_opcion == "1. Carga de Señal":
                         
                         st.session_state["paciente_activo"] = registro_real
                         st.session_state["datos_preprocesados"] = None 
+                        st.session_state["resultados_inferencia"] = None
                         st.success(mensaje)
                     else:
                         st.error(mensaje)
@@ -94,9 +95,10 @@ if menu_opcion == "1. Carga de Señal":
                 "Caso 2: Ritmo Sinusal Normal (NSR - Registro A4790)",
                 "Caso 3: Fibrilación Auricular (AF - Registro A3561)",
                 "Caso 4: Fibrilación Auricular (AF - Registro A6850)",
-                "Caso 5: Otras Arritmias (Other - Registro A2020)",
-                "Caso 6: Otras Arritmias (Other - Registro A5618)"
-            ]
+                "Caso 5: Bloqueo de Rama / Otras Arritmias (Other - Registro A2020)",
+                "Caso 6: Bloqueo de Rama / Otras Arritmias (Other - Registro A5618)"
+            ],
+            key="selector_casos_demo"
         )
         
         mapa_demos = {
@@ -104,11 +106,11 @@ if menu_opcion == "1. Carga de Señal":
             "Caso 2: Ritmo Sinusal Normal (NSR - Registro A4790)": "A4790_NSR",
             "Caso 3: Fibrilación Auricular (AF - Registro A3561)": "A3561_AF",
             "Caso 4: Fibrilación Auricular (AF - Registro A6850)": "A6850_AF",
-            "Caso 5: Otras Arritmias (Other - Registro A2020)": "A2020_Others",
-            "Caso 6: Otras Arritmias (Other - Registro A5618)": "A5618_Others"
+            "Caso 5: Bloqueo de Rama / Otras Arritmias (Other - Registro A2020)": "A2020_Others",
+            "Caso 6: Bloqueo de Rama / Otras Arritmias (Other - Registro A5618)": "A5618_Others"
         }
         
-        if st.button("🚀 Inicializar Caso de Estudio Seleccionado", type="secondary"):
+        if st.button("🚀 Inicializar Caso de Estudio Seleccionado", type="secondary", key="btn_inicializar_demo"):
             with st.spinner("Cargando matriz clínica desde el repositorio interno..."):
                 archivo_base = mapa_demos[demo_seleccionado]
                 registro_demo = cargar_registro_ejemplo_interno(archivo_base)
@@ -122,11 +124,11 @@ if menu_opcion == "1. Carga de Señal":
                     
                     st.session_state["paciente_activo"] = registro_demo
                     st.session_state["datos_preprocesados"] = None 
+                    st.session_state["resultados_inferencia"] = None
                     st.success(f"¡Éxito! {demo_seleccionado} cargado correctamente en memoria RAM.")
                 else:
                     st.error(f"Error crítico: No se encontró el archivo '{archivo_base}' en la carpeta 'data/examples/'. Verifique el nombre en GitHub.")
 
-    # CIERRE CORRECTO DEL FILTRADO VISUAL DE LA PANTALLA 1
     if st.session_state["paciente_activo"] is not None:
         st.markdown("---")
         st.subheader("📊 Panel Integral de Metadatos (Estándar PhysioNet)")
@@ -153,7 +155,7 @@ if menu_opcion == "1. Carga de Señal":
         with col_tech3:
             st.info(f"**Formato de Almacenamiento:**\n\n* **Módulo Lector:** {paciente['formato_almacenamiento']}\n* **Datos Clínicos:** {paciente['metadatos_clinicos']}")
 
-        st.markdown("**Derivaciones detectadas:**")
+        st.markdown("**Matriz de Canales Detectados:**")
         st.code(" | ".join(paciente["derivaciones"]), language="text")
 
         st.markdown("---")
@@ -165,20 +167,18 @@ if menu_opcion == "1. Carga de Señal":
         for idx, derivacion in enumerate(paciente["derivaciones"]):
             col_actual = cols_check[idx % 6]
             with col_actual:
-                if st.checkbox(derivacion, value=False, key=f"chk_{derivacion}"):
+                if st.checkbox(derivacion, value=False, key=f"chk_tab1_{derivacion}"):
                     derivaciones_seleccionadas.append(derivacion)
                     
         if derivaciones_seleccionadas:
             st.markdown("###")
             for derivacion_activa in derivaciones_seleccionadas:
                 graficar_derivacion_ecg(paciente, derivacion_activa)
-        else:
-            st.warning("Seleccione al menos una derivación de la matriz superior para desplegar su análisis gráfico.")
 
 # ==============================================================================
-# PANTALLA 2: MODULO DE PREPROCESAMIENTO DE SEÑALES (COMPLETAMENTE INDEPENDIENTE)
+# PESTAÑA 2: MODULO DE PREPROCESAMIENTO DE SEÑALES
 # ==============================================================================
-elif menu_opcion == "2. Preprocesamiento":
+with tab2:
     st.header("⚡ Módulo de Preprocesamiento de Señales")
     st.write("Este módulo ejecuta la limpieza macro de la bioseñal y su fraccionamiento en tensores aptos para la red neuronal.")
     
@@ -186,11 +186,11 @@ elif menu_opcion == "2. Preprocesamiento":
         paciente = st.session_state["paciente_activo"]
         
         st.markdown("---")
-        st.markdown("### 🦾 Ejecución del Pipeline Analítico")
-        st.write("El sistema procesará de forma estandarizada la **Derivación II** (canal de referencia clínico) aplicando:")
+        st.markdown("### 🦾 Execution del Pipeline Analítico")
+        st.write("El sistema procesará la **Derivación II** aplicando:")
         st.markdown("* **Filtro Butterworth Pasabanda:** 0.5 a 40.0 Hz\n* **Remuestreo Polifásico:** Reducción analítica de 500 Hz a **250 Hz**\n* **Normalización Global:** Estandarización por Z-score\n* **Corte Arquitectural:** Segmentación rígida en ventanas de **10 segundos**")
         
-        if st.button("⚡ Ejecutar Pipeline de Preprocesamiento", type="primary"):
+        if st.button("⚡ Ejecutar Pipeline de Preprocesamiento", type="primary", key="btn_ejecutar_preproc"):
             with st.spinner("Ejecutando transformaciones matemáticas en segundo plano..."):
                 resultados, mensaje = ejecutar_pipeline_preprocesamiento(
                     matriz_multiderivacion=paciente["senal_cruda"],
@@ -198,7 +198,6 @@ elif menu_opcion == "2. Preprocesamiento":
                     derivacion_objetivo="II",
                     fs_original=paciente["frecuencia_muestreo"]
                 )
-                
                 if resultados:
                     st.session_state["datos_preprocesados"] = resultados
                     st.success(mensaje)
@@ -219,8 +218,6 @@ elif menu_opcion == "2. Preprocesamiento":
             with col_p3:
                 st.metric(label="Segmentos de 10s Obtenidos", value=proc["cantidad_segmentos"])
                 
-            st.info(f"💡 Cada uno de los **{proc['cantidad_segmentos']} segmentos** cuenta con un vector exacto de **2,500 puntos de datos** (250 Hz x 10s) con Media = 0 y Varianza = 1.")
-            
             idx_ii = paciente["derivaciones"].index("II")
             senal_cruda_ii = paciente["senal_cruda"][idx_ii]
             tiempo_crudo = np.arange(len(senal_cruda_ii)) / paciente["frecuencia_muestreo"]
@@ -233,27 +230,23 @@ elif menu_opcion == "2. Preprocesamiento":
             
             intervalo_seleccioned = st.slider(
                 "Intervalo de inspección (Segundos):",
-                min_value=0.0,
-                max_value=duracion_maxima_segundos,
-                value=(0.0, min(10.0, duracion_maxima_segundos)),
-                step=0.5
+                min_value=0.0, max_value=duracion_maxima_segundos,
+                value=(0.0, min(10.0, duracion_maxima_segundos)), step=0.5,
+                key="slider_temporal_tab2"
             )
             
             graficar_comparativa_preprocesamiento(
-                tiempo_crudo=tiempo_crudo,
-                senal_cruda=senal_cruda_ii,
-                tiempo_procesado=tiempo_procesado,
-                senal_procesada=proc["senal_continua_procesada"],
-                nombre_lead="II",
-                intervalo_tiempo=intervalo_seleccioned
+                tiempo_crudo=tiempo_crudo, senal_cruda=senal_cruda_ii,
+                tiempo_procesado=tiempo_procesado, senal_procesada=proc["senal_continua_procesada"],
+                nombre_lead="II", intervalo_tiempo=intervalo_seleccioned
             )
     else:
-        st.warning("⚠️ No se han detectado datos en la memoria RAM. Por favor, regrese al Módulo 1 de la Carga de Señal.")
+        st.warning("⚠️ No se han detectado datos en la memoria RAM. Por favor, cargue o inicialice un registro en la pestaña '1. Carga de Señal' primero.")
 
 # ==============================================================================
-# PANTALLA 3: INFERENCIA Y DASHBOARD (COMPLETAMENTE INDEPENDIENTE)
+# PESTAÑA 3: INFERENCIA Y DASHBOARD
 # ==============================================================================
-elif menu_opcion == "3. Inferencia y Dashboard":
+with tab3:
     st.header("📊 Tablero de Control Estadístico y Diagnóstico")
     st.write("Evaluación computacional por segmentos temporales a través del clasificador profundo de arritmias.")
     
@@ -263,22 +256,21 @@ elif menu_opcion == "3. Inferencia y Dashboard":
         
         st.markdown("---")
         st.markdown("### 🧠 Clasificación Computacional del Registro")
-        st.write(f"El sistema alimentará el modelo utilizando los **{proc['cantidad_segmentos']} segmentos** de 10 segundos extraídos de la **Derivación {proc['derivacion_procesada']}**.")
+        st.write(f"El sistema alimentará el modelo utilizando los **{proc['cantidad_segmentos']} segmentos** extraídos de la **Derivación {proc['derivacion_procesada']}**.")
         
-        if st.button("🧠 Ejecutar Inferencia Computacional", type="primary"):
+        if st.button("🧠 Ejecutar Inferencia Computacional", type="primary", key="btn_correr_inferencia"):
             with st.spinner("Inyectando tensores en la arquitectura del modelo..."):
                 predicciones_calculadas = ejecutar_inferencia_segmentos(
                     lista_segmentos=proc["lista_segmentos"],
                     etiqueta_referencia_global=paciente["etiqueta_referencia"]
                 )
                 st.session_state["resultados_inferencia"] = predicciones_calculadas
-                st.success("🤖 Clasificación completada de forma exitosa sobre el registro continuo.")
+                st.success("🤖 Clasificación completada de forma exitosa.")
                 
-        if "resultados_inferencia" in st.session_state and st.session_state["resultados_inferencia"] is not None:
+        if st.session_state["resultados_inferencia"] is not None:
             st.markdown("###")
             st.subheader("📋 Reporte Diagnóstico por Segmento (Ventanas de 10s)")
             
-            import pandas as pd
             df_reporte = pd.DataFrame(st.session_state["resultados_inferencia"])
             df_reporte.columns = ["Segmento", "Diagnóstico Predicho", "Prob NSR", "Prob AF", "Prob Other", "Prob Noise"]
             
@@ -289,39 +281,20 @@ elif menu_opcion == "3. Inferencia y Dashboard":
                 use_container_width=True, hide_index=True
             )
             
-
-            # --- NUEVO COMPONENTE: BOTÓN DE DESCARGA DE REPORTE INTEGRADO PDF ---
-            # --- COMPONENTE DE DESCARGA DE REPORTE INTEGRADO PDF (CORREGIDO) ---
             st.markdown("###")
+            bytes_pdf_crudos = generar_pdf_clinico(paciente, proc, st.session_state["resultados_inferencia"])
             
-            # Generamos los bytes base utilizando el motor de report_generator
-            bytes_pdf_crudos = generar_pdf_clinico(
-                paciente=paciente,
-                proc=proc,
-                resultados_inferencia=st.session_state["resultados_inferencia"]
-            )
-            
-            # SOLUCIÓN DE SOFTWARE: Convertimos explícitamente el objeto fpdf2 a bytes puros de Python
-            bytes_pdf_finales = bytes(bytes_pdf_crudos)
-            
-            # Botón de descarga con inyección de tipos nativos estables
             st.download_button(
                 label="📥 Descargar Reporte Clínico Formal (PDF)",
-                data=bytes_pdf_finales, # <-- Inyectamos el vector de bytes convertido
+                data=bytes(bytes_pdf_crudos),
                 file_name=f"Reporte_AFibDetect_Registro_{paciente['id_registro']}.pdf",
                 mime="application/pdf",
-                use_container_width=True
+                use_container_width=True,
+                key="btn_descarga_pdf_tab3"
             )
-            # ---------------------------------------------------------------------
-
-
-
-
-
-
+            
             st.markdown("---")
             st.subheader("🎛️ Selector de Ventana Diagnóstica")
-            
             duracion_maxima_segundos = float(len(proc["senal_continua_procesada"]) / proc["fs_nueva"])
             tiempo_procesado = np.arange(len(proc["senal_continua_procesada"])) / proc["fs_nueva"]
             
@@ -329,7 +302,7 @@ elif menu_opcion == "3. Inferencia y Dashboard":
                 "Rango de Inspección Clínica (Segundos):",
                 min_value=0.0, max_value=duracion_maxima_segundos,
                 value=(0.0, min(10.0, duracion_maxima_segundos)), step=0.5,
-                key="slider_dual_diagnostico"
+                key="slider_dual_diagnostico_tab3"
             )
             
             graficar_ecg_coloreado_por_clase(
@@ -340,9 +313,10 @@ elif menu_opcion == "3. Inferencia y Dashboard":
                 fs_nueva=proc["fs_nueva"]
             )
     else:
-        st.warning("⚠️ Falta completar pasos previos. Asegúrese de haber cargado el archivo en el Módulo 1 y haber presionado el botón de preprocesamiento en el Módulo 2.")
+        st.markdown("---")
+        st.warning("⚠️ Flujo Incompleto: Asegúrese de haber inicializado el registro en la pestaña '1. Carga de Señal' y haber presionado el botón de preprocesamiento en la pestaña '2. Preprocesamiento' para habilitar esta sección.")
 
-# 4. INYECCIÓN DE CÓDIGO CSS
+# 5. INYECCIÓN DE CÓDIGO CSS
 st.markdown(
     """
     <style>

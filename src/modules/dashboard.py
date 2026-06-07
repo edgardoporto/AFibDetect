@@ -40,19 +40,28 @@ def graficar_derivacion_ecg(paciente, nombre_derivacion):
 
 
 
-def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_procesado, senal_procesada, nombre_lead, fs_original=500, fs_nueva=250):
+
+def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_procesado, senal_procesada, nombre_lead, intervalo_tiempo, fs_original=500, fs_nueva=250):
     """
-    Genera un gráfico interactivo con doble eje Y, mostrando la totalidad de la señal
-    disponible (todos los segmentos obtenidos) a lo ancho de la pantalla.
+    Genera un gráfico interactivo con doble eje Y, acotando la vista inicial al 
+    intervalo de segundos (ej:) seleccionado dinámicamente por el usuario.
     """
+    seg_inicio, seg_fin = intervalo_tiempo
+    
+    # Traducimos los segundos seleccionados a índices exactos según la frecuencia de muestreo
+    idx_inicio_crudo = int(seg_inicio * fs_original)
+    idx_fin_crudo = int(seg_fin * fs_original)
+    
+    idx_inicio_proc = int(seg_inicio * fs_nueva)
+    idx_fin_proc = int(seg_fin * fs_nueva)
+    
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # CAPA 1 (FONDO): TRAZA ROJA EN LÍNEA CONTINUA (Señal Cruda Completa)
-    # Removemos los recortes numéricos para que lea el vector entero
+    # CAPA 1 (FONDO): TRAZA ROJA EN LÍNEA CONTINUA (Recortada al intervalo activo)
     fig.add_trace(
         go.Scatter(
-            x=tiempo_crudo,
-            y=senal_cruda,
+            x=tiempo_crudo[idx_inicio_crudo:idx_fin_crudo],
+            y=senal_cruda[idx_inicio_crudo:idx_fin_crudo],
             mode='lines',
             name=f'ECG Crudo Original ({fs_original} Hz)',
             line=dict(color='#FCA5A5', width=1.1)
@@ -60,12 +69,11 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
         secondary_y=False
     )
     
-    # CAPA 2 (PRIMER PLANO): TRAZA VERDE (Señal Procesada Completa)
-    # Muestra los 2 segmentos continuos uno detrás del otro de forma fluida
+    # CAPA 2 (PRIMER PLANO): TRAZA VERDE (Recortada al intervalo activo)
     fig.add_trace(
         go.Scatter(
-            x=tiempo_procesado,
-            y=senal_procesada,
+            x=tiempo_procesado[idx_inicio_proc:idx_fin_proc],
+            y=senal_procesada[idx_inicio_proc:idx_fin_proc],
             mode='lines',
             name=f'ECG Procesado Destino ({fs_nueva} Hz)',
             line=dict(color='#2ECC71', width=1.4)
@@ -73,16 +81,15 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
         secondary_y=True
     )
     
-    # Configuración de Layout Estándar de Plotly
+    # Configuración de Layout Estándar
     fig.update_layout(
-        title=f"Impacto del Pipeline de Preprocesamiento — Derivación {nombre_lead} (Registro Completo)",
+        title=f"Impacto del Pipeline de Preprocesamiento — Derivación {nombre_lead} (Ventana: {seg_inicio}s - {seg_fin}s)",
         xaxis_title="Tiempo (Segundos)",
         template="plotly_white",
         height=440,
         margin=dict(l=40, r=40, t=90, b=40), 
         hovermode="x unified",
         
-        # Leyenda horizontal en la parte inferior externa
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -92,21 +99,12 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
         )
     )
     
-    # Títulos individuales y colores de los ejes verticales de referencia
     fig.update_yaxes(title_text="<b>Amplitud Cruda (Voltaje Original)</b>", secondary_y=False, color='#E53E3E')
     fig.update_yaxes(title_text="<b>Amplitud Normalizada (Z-score)</b>", secondary_y=True, color='#2ECC71')
     
-    # Configuración de interacción del lienzo
     config_grafico = {
         'displayModeBar': True,
-        'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
-        'toImageButtonOptions': {
-            'format': 'png',
-            'filename': f'comparativa_preproc_lead_{nombre_lead}',
-            'height': 500,
-            'width': 1000,
-            'scale': 2
-        }
+        'modeBarButtonsToRemove': ['lasso2d', 'select2d']
     }
     
     st.plotly_chart(fig, use_container_width=True, key=f"comp_{nombre_lead}", config=config_grafico)

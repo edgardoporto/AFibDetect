@@ -1,7 +1,7 @@
+from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import streamlit as st
 import numpy as np
-from plotly.subplots import make_subplots
 
 def graficar_derivacion_ecg(paciente, nombre_derivacion):
     """
@@ -36,19 +36,13 @@ def graficar_derivacion_ecg(paciente, nombre_derivacion):
     st.plotly_chart(fig, use_container_width=True, key=f"plot_{nombre_derivacion}")
 
 
-
-
-
-
-
 def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_procesado, senal_procesada, nombre_lead, intervalo_tiempo, fs_original=500, fs_nueva=250):
     """
     Genera un gráfico interactivo con doble eje Y, acotando la vista inicial al 
-    intervalo de segundos (ej:) seleccionado dinámicamente por el usuario.
+    intervalo de segundos seleccionado dinámicamente por el usuario.
     """
     seg_inicio, seg_fin = intervalo_tiempo
     
-    # Traducimos los segundos seleccionados a índices exactos según la frecuencia de muestreo
     idx_inicio_crudo = int(seg_inicio * fs_original)
     idx_fin_crudo = int(seg_fin * fs_original)
     
@@ -57,20 +51,19 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
     
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # CAPA 1 (FONDO): TRAZA ROJA EN LÍNEA CONTINUA (Recortada al intervalo activo)
+    # CAPA 1 (FONDO): TRAZA ROJA EN LÍNEA CONTINUA
     fig.add_trace(
         go.Scatter(
             x=tiempo_crudo[idx_inicio_crudo:idx_fin_crudo],
             y=senal_cruda[idx_inicio_crudo:idx_fin_crudo],
             mode='lines',
             name=f'ECG Crudo Original ({fs_original} Hz)',
-            #line=dict(color='#FCA5A5', width=1.1)
-            line=dict(color='#E53E3E', width=1.5, dash='dot') 
+            line=dict(color='#FCA5A5', width=1.1)
         ),
         secondary_y=False
     )
     
-    # CAPA 2 (PRIMER PLANO): TRAZA VERDE (Recortada al intervalo activo)
+    # CAPA 2 (PRIMER PLANO): TRAZA VERDE
     fig.add_trace(
         go.Scatter(
             x=tiempo_procesado[idx_inicio_proc:idx_fin_proc],
@@ -82,7 +75,6 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
         secondary_y=True
     )
     
-    # Configuración de Layout Estándar
     fig.update_layout(
         title=f"Impacto del Pipeline de Preprocesamiento — Derivación {nombre_lead} (Ventana: {seg_inicio}s - {seg_fin}s)",
         xaxis_title="Tiempo (Segundos)",
@@ -90,14 +82,7 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
         height=440,
         margin=dict(l=40, r=40, t=90, b=40), 
         hovermode="x unified",
-        
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.25,
-            xanchor="center",
-            x=0.5
-        )
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5)
     )
     
     fig.update_yaxes(title_text="<b>Amplitud Cruda (Voltaje Original)</b>", secondary_y=False, color='#E53E3E')
@@ -107,7 +92,6 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
         'displayModeBar': True,
         'modeBarButtonsToRemove': ['lasso2d', 'select2d']
     }
-    
     st.plotly_chart(fig, use_container_width=True, key=f"comp_{nombre_lead}", config=config_grafico)
 
 
@@ -116,49 +100,39 @@ def graficar_ecg_coloreado_por_clase(tiempo_procesado, senal_procesada, resultad
     Grafica la señal continua dividida en ventanas de 10 segundos, pintando cada tramo
     con el color específico del diagnóstico predicho por la Inteligencia Artificial.
     """
-    import plotly.graph_objects as go
-    import streamlit as st
-    
-    puntos_por_ventana = int(duracion_ventana_seg * fs_nueva) # 2500 muestras
+    puntos_por_ventana = int(duracion_ventana_seg * fs_nueva)
     total_muestras = len(senal_procesada)
     
-    # Definimos la paleta de colores clínicos estandarizada del proyecto
     paleta_colores = {
-        "NSR": "#2ECC71",    # Verde Clínico (Ritmo Normal)
-        "AF": "#E74C3C",     # Rojo Médico (Fibrilación Auricular)
-        "Other": "#3498DB",  # Azul Informativo (Otras Arritmias)
-        "Noise": "#95A5A6"   # Gris (Señal Contaminada)
+        "NSR": "#2ECC71",    # Verde Clínico
+        "AF": "#E74C3C",     # Rojo Médico
+        "Other": "#3498DB",  # Azul Informativo
+        "Noise": "#95A5A6"   # Gris
     }
     
     fig = go.Figure()
     
-    # Iteramos bloque por bloque sobre la señal continua
     for idx, i in enumerate(range(0, total_muestras, puntos_por_ventana)):
         inicio = i
         fin = min(i + puntos_por_ventana, total_muestras)
         
-        # Extraemos el fragmento de datos correspondiente a esta ventana
         fragmento_senal = senal_procesada[inicio:fin]
         tiempo_fragmento = tiempo_procesado[inicio:fin]
         
-        # Buscamos qué predijo el modelo para este número de segmento exacto
-        # Si por alguna razón no hay predicción, usamos 'NSR' por defecto de seguridad
         clase_predicha = "NSR"
         if idx < len(resultados_inferencia):
             clase_predicha = resultados_inferencia[idx]["diagnostico_ganador"]
             
         color_tramo = paleta_colores.get(clase_predicha, "#95A5A6")
         
-        # Añadimos la línea de este segmento al lienzo con su color respectivo
         fig.add_trace(go.Scatter(
             x=tiempo_fragmento,
             y=fragmento_senal,
             mode='lines',
             name=f"Ventana {idx+1}: {clase_predicha}",
             line=dict(color=color_tramo, width=1.5),
-            # Agrupamos los elementos en la leyenda de Plotly de forma limpia
             legendgroup=clase_predicha,
-            showlegend=True if idx == 0 or idx == 1 else False # Evita duplicar nombres repetidos en la leyenda
+            showlegend=True if idx == 0 or idx == 1 else False
         ))
         
     fig.update_layout(
@@ -171,5 +145,4 @@ def graficar_ecg_coloreado_por_clase(tiempo_procesado, senal_procesada, resultad
         hovermode="x unified",
         legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5)
     )
-    
     st.plotly_chart(fig, use_container_width=True, key="plot_diagnostico_coloreado")

@@ -42,7 +42,7 @@ with st.sidebar:
     st.markdown("🎓 **Programa**<br>Doctorado en Ingeniería de Sistemas e Informática", unsafe_allow_html=True)
     st.markdown("###")
 
-    st.markdown("🏫 **2026**<br>", unsafe_allow_html=True)
+    st.markdown("📅 **2026**<br>", unsafe_allow_html=True)
     
 
 

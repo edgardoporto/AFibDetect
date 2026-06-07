@@ -265,20 +265,48 @@ elif menu_opcion == "3. Inferencia y Dashboard":
                 hide_index=True
             )
             
-            # --- NUEVO COMPONENTE: MAPA DE CLASIFICACIÓN COLOREADO ---
-            st.markdown("###")
+  
+# --- NUEVO CONTROLLER: SLIDER DUAL ARRASTRABLE Y ENSANCHABLE ---
+            st.markdown("---")
+            st.subheader("🎛️ Visor Temporal del Diagnóstico")
+            st.write("Ajuste los extremos del bloque para ensanchar/reducir el rango de análisis, o arrástrelo completo para desplazarse:")
             
-            # Construimos el eje de tiempo a 250 Hz para la señal continua procesada
+            # Calculamos la duración máxima real del registro en segundos
+            duracion_maxima_segundos = float(len(proc["senal_continua_procesada"]) / proc["fs_nueva"])
             tiempo_procesado = np.arange(len(proc["senal_continua_procesada"])) / proc["fs_nueva"]
             
-            # Invocamos la función del dashboard pasándole los datos y las predicciones calculadas
+            # EL SECRETO DEL SLIDER DUAL: Pasamos una tupla (0.0, 10.0) en el parámetro 'value'
+            # Esto crea un bloque de rango flotante seleccionable con dos manijas ajustables
+            rango_seleccionado = st.slider(
+                "Rango de Inspección Clínica (Segundos):",
+                min_value=0.0,
+                max_value=duracion_maxima_segundos,
+                value=(0.0, min(10.0, duracion_maxima_segundos)), # Visor inicial por defecto de 10s
+                step=0.5,
+                key="slider_dual_diagnostico"
+            )
+            
+            # Mapeo Informativo: Calculamos qué número de segmentos caen dentro de la ventana seleccionada
+            seg_ini, seg_fin = rango_seleccionado
+            idx_segmento_inicio = int(seg_ini // 10) + 1
+            idx_segmento_fin = int((seg_fin - 0.01) // 10) + 1
+            
+            # Formateamos el reporte descriptivo para el usuario
+            if idx_segmento_inicio == idx_segmento_fin:
+                st.info(f"🔍 Inspeccionando morfológicamente el **Segmento {idx_segmento_inicio}** de la Inteligencia Artificial.")
+            else:
+                st.info(f"🔍 Inspeccionando una ventana ensanchada que abarca desde el **Segmento {idx_segmento_inicio}** hasta el **Segmento {idx_segmento_fin}**.")
+            
+            # Invocamos la gráfica coloreada pasándole el rango seleccionado
             graficar_ecg_coloreado_por_clase(
                 tiempo_procesado=tiempo_procesado,
                 senal_procesada=proc["senal_continua_procesada"],
                 resultados_inferencia=st.session_state["resultados_inferencia"],
+                intervalo_tiempo=rango_seleccionado, # Inyección de la tupla [inicio, fin]
                 fs_nueva=proc["fs_nueva"]
             )
-            # --------------------------------------------------------
+
+
 
 
 

@@ -95,29 +95,37 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
     st.plotly_chart(fig, use_container_width=True, key=f"comp_{nombre_lead}", config=config_grafico)
 
 
-def graficar_ecg_coloreado_por_clase(tiempo_procesado, senal_procesada, resultados_inferencia, fs_nueva=250, duracion_ventana_seg=10):
+
+
+
+def graficar_ecg_coloreado_por_clase(tiempo_procesado, senal_procesada, resultados_inferencia, intervalo_tiempo, fs_nueva=250, duracion_ventana_seg=10):
     """
-    Grafica la señal continua dividida en ventanas de 10 segundos, pintando cada tramo
-    con el color específico del diagnóstico predicho por la Inteligencia Artificial.
+    Grafica la señal continua segmentada, acotando la visualización al intervalo exacto 
+    [inicio, fin] seleccionado en el Slider dual arrastrable y ensanchable de Streamlit.
     """
-    puntos_por_ventana = int(duracion_ventana_seg * fs_nueva)
+    seg_inicio, seg_fin = intervalo_tiempo
+    puntos_por_ventana = int(duracion_ventana_seg * fs_nueva) # 2500 muestras por bloque de 10s
     total_muestras = len(senal_procesada)
     
-    paleta_colores = {
-        "NSR": "#2ECC71",    # Verde Clínico
-        "AF": "#E74C3C",     # Rojo Médico
-        "Other": "#3498DB",  # Azul Informativo
-        "Noise": "#95A5A6"   # Gris
-    }
+    # Paleta oficial de colores clínicos del proyecto
+    paleta_colores = {"NSR": "#2ECC71", "AF": "#E74C3C", "Other": "#3498DB", "Noise": "#95A5A6"}
+    nombres_clases = {"NSR": "Ritmo Normal (NSR)", "AF": "Fibrilación Auricular (AF)", "Other": "Otras Arritmias (Other)", "Noise": "Ruido (Noise)"}
     
     fig = go.Figure()
     
+    # 1. Creamos la leyenda estática de referencia en la derecha
+    for clase, color in paleta_colores.items():
+        fig.add_trace(go.Scatter(
+            x=[None], y=[None], mode='lines',
+            name=nombres_clases[clase],
+            line=dict(color=color, width=2.5),
+            showlegend=True
+        ))
+    
+    # 2. Dibujamos los segmentos que caen dentro del rango del visor seleccionado
     for idx, i in enumerate(range(0, total_muestras, puntos_por_ventana)):
         inicio = i
         fin = min(i + puntos_por_ventana, total_muestras)
-        
-        fragmento_senal = senal_procesada[inicio:fin]
-        tiempo_fragmento = tiempo_procesado[inicio:fin]
         
         clase_predicha = "NSR"
         if idx < len(resultados_inferencia):
@@ -125,24 +133,32 @@ def graficar_ecg_coloreado_por_clase(tiempo_procesado, senal_procesada, resultad
             
         color_tramo = paleta_colores.get(clase_predicha, "#95A5A6")
         
-        fig.add_trace(go.Scatter(
-            x=tiempo_fragmento,
-            y=fragmento_senal,
-            mode='lines',
-            name=f"Ventana {idx+1}: {clase_predicha}",
-            line=dict(color=color_tramo, width=1.5),
-            legendgroup=clase_predicha,
-            showlegend=True if idx == 0 or idx == 1 else False
-        ))
+        tiempo_fragmento = tiempo_procesado[inicio:fin]
+        fragmento_senal = senal_procesada[inicio:fin]
         
+        # Filtro de máscara booleana: Solo extrae los puntos que estén entre el inicio y fin del slider
+        mascara = (tiempo_fragmento >= seg_inicio) & (tiempo_fragmento <= seg_fin)
+        
+        if np.any(mascara):
+            fig.add_trace(go.Scatter(
+                x=tiempo_fragmento[mascara],
+                y=fragmento_senal[mascara],
+                mode='lines',
+                line=dict(color=color_tramo, width=1.5),
+                showlegend=False # Evita duplicar nombres en la leyenda
+            ))
+            
     fig.update_layout(
-        title="📋 Mapa de Clasificación Temporal (ECG Segmentado y Coloreado por la IA)",
+        title=f"📋 Inspección Diagnóstica Temporal — Ventana Activa: {seg_inicio:.1f}s a {seg_fin:.1f}s",
         xaxis_title="Tiempo (Segundos)",
         yaxis_title="Amplitud Normalizada (Z-score)",
         template="plotly_white",
         height=400,
         margin=dict(l=40, r=40, t=60, b=40),
         hovermode="x unified",
+        legend_itemclick=False,
+        legend_itemdoubleclick=False,
         legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5)
     )
+    
     st.plotly_chart(fig, use_container_width=True, key="plot_diagnostico_coloreado")

@@ -107,7 +107,7 @@ with tab1:
     else:
         st.write("Seleccione uno de los 6 casos reales pre-cargados en el servidor para auditar el sistema:")
         demo_seleccionado = st.selectbox(
-            "Casos de Estudio Disponibles:",
+            #"Casos de Estudio Disponibles:",
             [
                 "Caso 1: Ritmo Sinusal Normal (NSR - Registro A2225)",
                 "Caso 2: Ritmo Sinusal Normal (NSR - Registro A4790)",

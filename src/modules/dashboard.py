@@ -113,9 +113,44 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
         )
     )
     
-    # AJUSTE DE LA BARRA DE HERRAMIENTAS: Evita que flote encima de las letras del título
-    # Forzamos a que aparezca debajo o de forma más integrada en el marco gráfico
-    fig.update_layout(modebar=dict(orientation='v', bgcolor='rgba(0,0,0,0)'))
+
+
+    # Configuración avanzada del Layout arquitectural
+    fig.update_layout(
+        title=f"Impacto del Pipeline de Preprocesamiento — Derivación {nombre_lead} (Primeros 10 Segundos)",
+        xaxis_title="Tiempo (Segundos)",
+        template="plotly_white",
+        height=440,
+        margin=dict(l=40, r=40, t=80, b=40), # Mantenemos el margen de 80 para que el título respire
+        hovermode="x unified",
+        
+        # Reubicación estética de la leyenda horizontal abajo
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.25,
+            xanchor="center",
+            x=0.5
+        ),
+        
+        # --- SOLUCIÓN DE LA BARRA DE HERRAMIENTAS ---
+        # Forzamos a que la barra esté SIEMPRE visible de forma horizontal y la bajamos
+        config={
+            'displayModeBar': True, # Fuerza la visibilidad permanente (no solo al pasar el mouse)
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d'], # Quitamos botones inútiles de mapas
+        }
+    )
+    
+    # Bajamos la barra de herramientas 40 píxeles para que flote debajo del título de forma horizontal
+    fig.update_layout(
+        modebar=dict(
+            orientation='h',        # Configuración Horizontal limpia
+            y=0.92,                 # Altura exacta: justo arriba de la gráfica, pero debajo del título
+            x=0.98,                 # Alineado a la derecha de la cuadrícula
+            yanchor='top',
+            xanchor='right'
+        )
+    )
     
     # Títulos individuales y colores de los ejes verticales de referencia
     fig.update_yaxes(title_text="<b>Amplitud Cruda (Voltaje Original)</b>", secondary_y=False, color='#E53E3E')

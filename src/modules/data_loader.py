@@ -47,21 +47,17 @@ def cargar_registro_unico_wfdb(archivos_subidos):
 
 def cargar_registro_ejemplo_interno(nombre_archivo_base):
     """
-    Lee un registro de demostración real de la CPSC-2018 usando el
-    directorio de ejecución absoluto del servidor (CWD).
+    Lee un registro de demostración real de la CPSC-2018 mapeando de forma
+    flexible extensiones en mayúsculas y minúsculas para compatibilidad en Linux.
     """
     from modules.reader_cpsc2018 import leer_registro_cpsc2018
     import os
     
-    # Usamos la ruta raíz oficial del servidor que auditamos en la consola
     ruta_base_proyecto = os.getcwd()
-    
-    # Construimos la ruta absoluta limpia y compatible para Linux y Windows
     ruta_absoluta = os.path.join(ruta_base_proyecto, "data", "examples", nombre_archivo_base)
     
-    # Validamos la existencia física de la cabecera antes de alimentar a wfdb
-    if os.path.exists(ruta_absoluta + ".hea"):
+    # Blindaje contra extensiones: verificamos si existe en minúscula o mayúscula
+    if os.path.exists(ruta_absoluta + ".hea") or os.path.exists(ruta_absoluta + ".HEA"):
         return leer_registro_cpsc2018(ruta_absoluta)
         
     return None
-

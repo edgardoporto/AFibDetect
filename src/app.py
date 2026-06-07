@@ -7,6 +7,8 @@ from modules.data_loader import cargar_registro_unico_wfdb, cargar_registro_ejem
 from modules.dashboard import graficar_derivacion_ecg, graficar_comparativa_preprocesamiento, graficar_ecg_coloreado_por_clase
 from modules.preprocessor import ejecutar_pipeline_preprocesamiento
 from modules.inference import ejecutar_inferencia_segmentos
+from modules.report_generator import generar_pdf_clinico
+
 
 # Inicialización y configuración del Layout
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")
@@ -283,6 +285,29 @@ elif menu_opcion == "3. Inferencia y Dashboard":
                 use_container_width=True, hide_index=True
             )
             
+
+            # --- NUEVO COMPONENTE: BOTÓN DE DESCARGA DE REPORTE INTEGRADO PDF ---
+            st.markdown("###")
+            
+            # Compilamos dinámicamente el PDF llamando a nuestro generador en memoria RAM
+            bytes_pdf = generar_pdf_clinico(
+                paciente=paciente,
+                proc=proc,
+                resultados_inferencia=st.session_state["resultados_inferencia"]
+            )
+            
+            # Botón de descarga de Streamlit: Guarda el archivo directo en la PC del usuario
+            st.download_button(
+                label="📥 Descargar Reporte Clínico Formal (PDF)",
+                data=bytes_pdf,
+                file_name=f"Reporte_AFibDetect_Registro_{paciente['id_registro']}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
+            # ------------------------------------------------------
+
+
+
             st.markdown("---")
             st.subheader("🎛️ Selector de Ventana Diagnóstica")
             

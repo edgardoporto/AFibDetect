@@ -34,7 +34,8 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Arquitectura modular para la clasificación de AFib, NSR, Others y Noise.")
     st.caption("Edgard Oporto")
-    st.caption("UNMSM 2026")
+    st.caption("UNMSM FISI 2026")
+    st.caption("Doctorado en Ingeniería de Sistemas e Informática")
 
 
 def traducir_codigo_snomed(codigo_crudo):
@@ -152,7 +153,7 @@ if menu_opcion == "1. Carga de Señal":
         with col_tech3:
             st.info(f"**Formato de Almacenamiento:**\n\n* **Módulo Lector:** {paciente['formato_almacenamiento']}\n* **Datos Clínicos:** {paciente['metadatos_clinicos']}")
 
-        st.markdown("**Matriz de Canales Detectados:**")
+        st.markdown("**Derivaciones detectadas:**")
         st.code(" | ".join(paciente["derivaciones"]), language="text")
 
         st.markdown("---")

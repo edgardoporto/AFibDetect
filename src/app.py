@@ -23,28 +23,24 @@ if "datos_preprocesados" not in st.session_state:
 if "resultados_inferencia" not in st.session_state:
     st.session_state["resultados_inferencia"] = None
 
-# 3. INTERFAZ DE USUARIO: BARRA LATERAL (INFORMACIÓN INSTITUCIONAL FIJA)
-# 3. INTERFAZ DE USUARIO: BARRA LATERAL (ESTRUCTURA VERTICAL ANTI-RECORTES)
-# 3. INTERFAZ DE USUARIO: BARRA LATERAL (COMPACTA Y SIN ESPACIADOS EXCESIVOS)
+
+
+# 3. INTERFAZ DE USUARIO: BARRA LATERAL (CONTROL DE SALTO HTML COMPACTO)
 with st.sidebar:
     st.title("🩺 AFibDetect v1.0")
     st.markdown("---")
     st.markdown("**Modelo en cascada para la clasificacion de AFib, NSR, Others y Noise.**")
     st.markdown("---")
     
-    # Unificamos todo en un solo bloque con saltos de linea simples para controlar el espaciado
-    st.markdown(
-        """
-        👨‍⚕️ **Investigador**
-        Edgard Oporto
-        
-        🏫 **Institucion**
-        UNMSM FISI 2026
-        
-        🎓 **Grado Academico**
-        Doctorado en Ingenieria de Sistemas e Informatica
-        """
-    )
+    # El uso de <br> fuerza el salto abajo exacto sin abrir un párrafo gigante
+    st.markdown("👨‍⚕️ **Investigador**<br>Edgard Oporto", unsafe_allow_html=True)
+    st.markdown("###") # Separador intermedio limpio
+    
+    st.markdown("🏫 **Institucion**<br>UNMSM FISI 2026", unsafe_allow_html=True)
+    st.markdown("###")
+    
+    st.markdown("🎓 **Grado Academico**<br>Doctorado en Ingenieria de Sistemas e Informatica", unsafe_allow_html=True)
+
 
 
 

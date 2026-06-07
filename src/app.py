@@ -32,7 +32,7 @@ with st.sidebar:
         ["1. Carga de Señal", "2. Preprocesamiento", "3. Inferencia"]
     )
     st.markdown("---")
-    st.caption("Arquitectura modular para la clasificación de: AFib, NSR, Others y Noise.")
+    st.caption("Arquitectura modular para la clasificación de AFib, NSR, Others y Noise.")
     st.caption("Edgard Oporto")
     st.caption("UNMSM 2026")
 

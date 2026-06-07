@@ -3,33 +3,32 @@ import datetime
 
 class ReporteClinicoECG(FPDF):
     def header(self):
-        # Encabezado formal membretado (Sanitizado sin emojis)
+        # Encabezado formal membretado estandar
         self.set_font('Helvetica', 'B', 14)
-        self.set_text_color(30, 41, 59) # Gris oscuro elegante
+        self.set_text_color(30, 41, 59)
         self.cell(0, 10, 'SISTEMA COMPUTACIONAL AFIBDETECT v1.0', ln=True, align='L')
         self.set_font('Helvetica', 'I', 9)
         self.set_text_color(100, 116, 139)
         self.cell(0, 5, 'Plataforma Digital de Deteccion Automatica de Arritmias de Alta Precision', ln=True, align='L')
-        self.line(10, 27, 200, 27) # Linea divisoria superior
+        self.line(10, 27, 200, 27)
         self.ln(8)
 
     def footer(self):
-        # Pie de página estandar
+        # Pie de pagina estandar corregido: Reemplazado guion largo por guion simple
         self.set_y(-15)
         self.set_font('Helvetica', 'I', 8)
         self.set_text_color(148, 163, 184)
-        self.cell(0, 10, f'Pagina {self.page_no()}/{{nb}} — Documento Informativo de Investigacion Cientifica', align='C')
+        self.cell(0, 10, f'Pagina {self.page_no()}/{{nb}} - Documento Informativo de Investigacion Cientifica', align='C')
 
 def generar_pdf_clinico(paciente, proc, resultados_inferencia):
     """
     Construye la estructura del reporte en PDF leyendo los datos en memoria RAM.
-    Version blindada compatible con fuentes Helvetica core estándar.
     """
     pdf = ReporteClinicoECG()
     pdf.alias_nb_pages()
     pdf.add_page()
     
-    # 1. BLOQUE DE METADATOS DEL PACIENTE (Texto plano seguro)
+    # 1. BLOQUE DE METADATOS DEL PACIENTE
     pdf.set_font('Helvetica', 'B', 11)
     pdf.set_text_color(15, 23, 42)
     pdf.cell(0, 8, '1. INFORMACION GENERAL DEL REGISTRO CLINICO', ln=True)
@@ -83,7 +82,7 @@ def generar_pdf_clinico(paciente, proc, resultados_inferencia):
         pdf.cell(20, 6, str(seg["num_segmento"]), border=1, align='C')
         
         if seg["diagnostico_ganador"] == "AF":
-            pdf.set_text_color(220, 38, 38) # Alerta roja en texto plano
+            pdf.set_text_color(220, 38, 38)
             pdf.set_font('Helvetica', 'B', 9)
         else:
             pdf.set_text_color(15, 23, 42)

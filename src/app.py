@@ -172,7 +172,7 @@ if menu_opcion == "1. Carga de Señal":
 
 
 
-    if st.session_state["paciente_activo"] is not None:
+if st.session_state["paciente_activo"] is not None:
         st.markdown("---")
         st.subheader("📊 Panel Integral de Metadatos (Estándar PhysioNet)")
         

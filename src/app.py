@@ -29,10 +29,10 @@ with st.sidebar:
     # El menú izquierdo solo sirve como selector de pestañas del sistema
     menu_opcion = st.radio(
         "Seleccione un Módulo:",
-        ["1. Carga de Señal", "2. Preprocesamiento", "3. Inferencia y Dashboard"]
+        ["1. Carga de Señal", "2. Preprocesamiento", "3. Inferencia"]
     )
     st.markdown("---")
-    st.caption("Arquitectura modular para la clasificación de arritmias.")
+    st.caption("Arquitectura modular para la clasificación de: AFib, NSR, Others y Noise.")
     st.caption("Edgard Oporto")
     st.caption("UNMSM 2026")
 

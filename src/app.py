@@ -316,15 +316,51 @@ with tab3:
         st.markdown("---")
         st.warning("⚠️ Flujo Incompleto: Asegúrese de haber inicializado el registro en la pestaña '1. Carga de Señal' y haber presionado el botón de preprocesamiento en la pestaña '2. Preprocesamiento' para habilitar esta sección.")
 
+
+
+
 # 5. INYECCIÓN DE CÓDIGO CSS
+# 5. INYECCIÓN DE CÓDIGO CSS (Fijación de Pestañas Sticky y Corrección de Recorte)
 st.markdown(
     """
     <style>
-        .block-container { padding-top: 2.5rem; padding-bottom: 0rem; margin-top: 0rem; }
-        h1 { font-size: 2.0rem !important; font-weight: 700; padding-bottom: 0.2rem; margin-top: 0rem; }
-        h2, h3 { font-size: 1.3rem !important; font-weight: 600; margin-top: 0.5rem; }
-        .stText, p, li { font-size: 0.95rem !important; }
+        /* 1. Ajuste del contenedor principal para eliminar el recorte superior de raíz */
+        .block-container { 
+            padding-top: 4.5rem !important; 
+            padding-bottom: 0rem; 
+            margin-top: 0rem; 
+        }
+        
+        /* 2. Formateo estético del título general */
+        h1 { 
+            font-size: 2.0rem !important; 
+            font-weight: 700; 
+            padding-bottom: 0.2rem; 
+            margin-top: 0rem; 
+        }
+        h2, h3 { 
+            font-size: 1.3rem !important; 
+            font-weight: 600; 
+            margin-top: 0.5rem; 
+        }
+        .stText, p, li { 
+            font-size: 0.95rem !important; 
+        }
+        
+        /* 3. CONVERSIÓN A PESTAÑAS STICKY FIJAS (El secreto del éxito) */
+        /* Detectamos la clase nativa que usa Streamlit para agrupar los botones de las pestañas */
+        div[data-testid="stTabs"] {
+            position: -webkit-sticky !important; /* Compatibilidad con Safari */
+            position: sticky !important;
+            top: 2.85rem !important; /* Altura de la barra superior gris de Streamlit */
+            z-index: 999999 !important; /* Forzamos a que flote por encima de cualquier gráfico de Plotly */
+            background-color: #ffffff !important; /* Fondo blanco sólido para que las curvas no se traslapan por detrás */
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            border-bottom: 1px solid #e2e8f0 !important; /* Línea divisoria sutil elegante */
+        }
     </style>
     """,
     unsafe_allow_html=True
 )
+

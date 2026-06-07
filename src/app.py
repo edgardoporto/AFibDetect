@@ -1,9 +1,13 @@
 import streamlit as st
 # Importamos la tabla de códigos desde tu archivo de configuración
 from config import SNOMED_MAP
+# Importación del módulo gráfico corregido
+from modules.dashboard import graficar_derivacion_ecg
 
 # Inicialización y configuración del Layout
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")
+
+
 
 # Inicializamos el estado para almacenar un solo paciente de CPSC-2018
 if "paciente_activo" not in st.session_state:
@@ -37,27 +41,53 @@ def traducir_codigo_snomed(codigo_crudo):
         return "Other (Unknown)"
 
 # Simulador de datos de PhysioNet modificado con códigos reales
+import numpy as np # Asegúrate de tener este import al inicio del archivo si no estaba
+
+# Simulador de datos de PhysioNet modificado con curvas numéricas de prueba
 if archivos_subidos and len(archivos_subidos) == 2:
     if st.session_state["paciente_activo"] is None:
-        # Simulamos que leímos el código "59118001" (RBBB) de la cabecera .hea
         codigo_snomed_detectado = "59118001" 
-        
-        # El traductor procesará dinámicamente la etiqueta según tu requerimiento
         etiqueta_procesada = traducir_codigo_snomed(codigo_snomed_detectado)
+        
+        # --- NUEVO: Generamos señales de prueba para las 12 derivaciones ---
+        # Creamos una matriz de 12 filas (canales) por 15,000 puntos (muestras)
+        fs_simulada = 300
+        puntos_totales = 15000
+        tiempo_vector = np.arange(puntos_totales) / fs_simulada
+        
+        # Creamos una onda base que simule variaciones de voltaje de ECG
+        matriz_senales = []
+        for i in range(12):
+            # Cada derivación tendrá una frecuencia ligeramente desfasada para simular morfologías distintas
+            onda_base = 0.5 * np.sin(2 * np.pi * 1.2 * tiempo_vector + i) 
+            # Añadimos un pequeño componente que simule el complejo QRS (picos de voltaje periódicos)
+            picos_qrs = 1.5 * (np.abs(np.sin(2 * np.pi * 1.0 * tiempo_vector + i)) > 0.96)
+            ruido_blanco = 0.05 * np.random.normal(0, 1, puntos_totales)
+            
+            matriz_senales.append(onda_base + picos_qrs + ruido_blanco)
+            
+        matriz_final = np.array(matriz_senales)
+        # ------------------------------------------------------------------
         
         st.session_state["paciente_activo"] = {
             "id_registro": "A0001.mat",
-            "frecuencia_muestreo": 300,
-            "total_muestras": 15000,
+            "frecuencia_muestreo": fs_simulada,
+            "total_muestras": puntos_totales,
             "num_derivaciones": 12,
             "derivaciones": ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"],
-            "etiqueta_referencia": etiqueta_procesada,  # <--- GUARDADO CON EL NUEVO FORMATO
+            "senal_cruda": matriz_final, # <-- INYECTAMOS LA MATRIZ DE VOLTAJE REAL EN MEMORIA
+            "etiqueta_referencia": etiqueta_procesada,
             "resolución_adc": "16-bit",
             "ganancia_base": "1000 adu/mV",
             "formato_almacenamiento": "Matlab v4 (Format 16)",
             "metadatos_clinicos": "Edad: 68 | Sexo: Masculino | Tipo: Registro Clínico Estándar"
         }
         st.success("Validación e ingesta biomédica completada con éxito.")
+
+
+
+
+
 
 # 2. DESPLIEGUE EXHAUSTIVO DE TODOS LOS METADATOS
 if st.session_state["paciente_activo"] is not None:
@@ -123,14 +153,12 @@ if st.session_state["paciente_activo"] is not None:
         
         # Iteramos únicamente sobre los canales que el usuario activó
         for derivacion_activa in derivaciones_seleccionadas:
-            
-            # --- AQUÍ INVOCAREMOS PRÓXIMAMENTE LA FUNCIÓN GRÁFICA REAL DE Plotly ---
-            # Por ahora, dejamos un contenedor visual informativo por cada canal seleccionado
-            st.info(f"📈 [Espacio Reservado] Renderizando la señal en tiempo real para la **Derivación {derivacion_activa}**...")
+            # CORRECCIÓN DEFINITIVA: Llamamos a Plotly pasando el paciente y el canal
+            graficar_derivacion_ecg(paciente, derivacion_activa)
             
     else:
-        # Mensaje informativo si el usuario desmarcó todo
         st.warning("Seleccione al menos una derivación de la matriz superior para desplegar su análisis gráfico.")
+
 
 
 

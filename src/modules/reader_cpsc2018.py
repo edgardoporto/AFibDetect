@@ -55,7 +55,7 @@ def leer_registro_cpsc2018(ruta_base_registro):
     return {
         "id_registro": os.path.basename(ruta_base_registro) + ".mat",
         "frecuencia_muestreo": frecuencia_muestreo,
-        "total_muestras": matriz_multiderivacion.shape,
+        "total_muestras": int(matriz_multiderivacion.shape[1]),
         "num_derivaciones": len(nombres_canales),
         "derivaciones": nombres_canales,
         "senal_cruda": matriz_multiderivacion,

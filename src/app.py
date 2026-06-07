@@ -24,15 +24,15 @@ if "datos_preprocesados" not in st.session_state:
 with st.sidebar:
     st.title("🩺 AFibDetect v1.0")
     st.markdown("---")
-    st.markdown("### Navegación de Capas")
+    st.markdown("### Flujo de Trabajo")
     
     # El menú izquierdo solo sirve como selector de pestañas del sistema
     menu_opcion = st.radio(
-        "Seleccione un Módulo:",
+        "Seleccione un módulo:",
         ["1. Carga de Señal", "2. Preprocesamiento", "3. Inferencia"]
     )
     st.markdown("---")
-    st.caption("Arquitectura modular para la clasificación de AFib, NSR, Others y Noise.")
+    st.caption("Modelo en cascada para la clasificación de AFib, NSR, Others y Noise.")
     st.caption("Edgard Oporto")
     st.caption("UNMSM FISI 2026")
     st.caption("Doctorado en Ingeniería de Sistemas e Informática")

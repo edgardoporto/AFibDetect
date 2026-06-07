@@ -44,34 +44,96 @@ def traducir_codigo_snomed(codigo_crudo):
 # ==============================================================================
 # PANTALLA 1: MODULO DE INGRESO Y VALIDACIÓN DE DATOS
 # ==============================================================================
+# ==============================================================================
+# PANTALLA 1: MODULO DE INGRESO Y VALIDACIÓN DE DATOS (VERSION HÍBRIDA)
+# ==============================================================================
 if menu_opcion == "1. Carga de Señal":
     st.header("📥 Módulo de Ingreso y Validación de Datos")
-    st.write("Cargue los archivos de un registro de la CPSC-2018 (Arrastre juntos el archivo de texto .hea y la matriz de señal .mat).")
-
-    archivos_subidos = st.file_uploader(
-        "Seleccione o arrastre juntos los archivos .hea y .mat del registro:", 
-        type=["hea", "mat"],
-        accept_multiple_files=True
+    st.write("Seleccione el método de ingreso de datos electrocardiográficos de la CPSC-2018:")
+    
+    # 1. SELECTOR DEL MODO DE INGESTA (GUI)
+    modo_ingreso = st.radio(
+        "Método de Ingesta:",
+        ["🔬 Cargar Archivos Propios (.hea + .mat)", "🚀 Usar Registro de Demostración (Para Pruebas Rápidas)"],
+        horizontal=True
     )
+    
+    st.markdown("###") # Pequeño espacio de separación
+    
+    # --- CASO A: EL USUARIO SUBE SUS PROPIOS ARCHIVOS ---
+    if modo_ingreso == "🔬 Cargar Archivos Propios (.hea + .mat)":
+        archivos_subidos = st.file_uploader(
+            "Seleccione o arrastre juntos los archivos .hea y .mat del registro:", 
+            type=["hea", "mat"],
+            accept_multiple_files=True
+        )
 
-    if archivos_subidos and len(archivos_subidos) == 2:
-        if st.session_state["paciente_activo"] is None:
-            with st.spinner("Parseando matriz binaria de Matlab en memoria RAM..."):
-                registro_real, mensaje = cargar_registro_unico_wfdb(archivos_subidos)
-                
-                if registro_real:
-                    registro_real["etiqueta_referencia"] = traducir_codigo_snomed(registro_real["codigo_snomed"])
-                    registro_real["resolución_adc"] = "16-bit"
-                    registro_real["ganancia_base"] = "1000 adu/mV"
-                    registro_real["formato_almacenamiento"] = "Matlab v4 (Format 16)"
-                    registro_real["metadatos_clinicos"] = "Registro Clínico CPSC-2018"
+        if archivos_subidos and len(archivos_subidos) == 2:
+            if st.session_state["paciente_activo"] is None:
+                with st.spinner("Parseando matriz binaria de Matlab en memoria RAM..."):
+                    registro_real, mensaje = cargar_registro_unico_wfdb(archivos_subidos)
                     
-                    st.session_state["paciente_activo"] = registro_real
-                    # Forzamos el reseteo del preprocesamiento si se monta un nuevo paciente
+                    if registro_real:
+                        registro_real["etiqueta_referencia"] = traducir_codigo_snomed(registro_real["codigo_snomed"])
+                        registro_real["resolución_adc"] = "16-bit"
+                        registro_real["ganancia_base"] = "1000 adu/mV"
+                        registro_real["formato_almacenamiento"] = "Matlab v4 (Format 16)"
+                        registro_real["metadatos_clinicos"] = "Registro Clínico CPSC-2018"
+                        
+                        st.session_state["paciente_activo"] = registro_real
+                        st.session_state["datos_preprocesados"] = None 
+                        st.success(mensaje)
+                    else:
+                        st.error(mensaje)
+                        
+    # --- CASO B: EL USUARIO ELIGE UN EJEMPLO DE LA BASE DE DATOS INTERNA ---
+    else:
+        st.write("Seleccione uno de los casos reales pre-cargados en el servidor para auditar el pipeline:")
+        demo_seleccionado = st.selectbox(
+            "Casos de Estudio Disponibles:",
+            [
+                "Caso 1: Ritmo Sinusal Normal de Referencia (NSR)",
+                "Caso 2: Episodio Aguto de Fibrilación Auricular (AF)",
+                "Caso 3: Patología de Bloqueo de Rama Derecha (Other - RBBB)"
+            ]
+        )
+        
+        # Mapeamos la selección de la GUI con los nombres reales de los archivos en disco
+        mapa_demos = {
+            "Caso 1: Ritmo Sinusal Normal de Referencia (NSR)": "ejemplo_NSR",
+            "Caso 2: Episodio Aguto de Fibrilación Auricular (AF)": "ejemplo_AF",
+            "Caso 3: Patología de Bloqueo de Rama Derecha (Other - RBBB)": "ejemplo_RBBB"
+        }
+        
+        # Botón de carga instantánea
+        if st.button("🚀 Inicializar Caso de Estudio Seleccionado", type="secondary"):
+            with st.spinner("Cargando registro clínico desde el repositorio interno..."):
+                from modules.data_loader import cargar_registro_ejemplo_interno
+                
+                archivo_base = mapa_demos[demo_seleccionado]
+                registro_demo = cargar_registro_ejemplo_interno(archivo_base)
+                
+                if registro_demo:
+                    registro_demo["etiqueta_referencia"] = traducir_codigo_snomed(registro_demo["codigo_snomed"])
+                    registro_demo["resolución_adc"] = "16-bit"
+                    registro_demo["ganancia_base"] = "1000 adu/mV"
+                    registro_demo["formato_almacenamiento"] = "Matlab v4 (Format 16)"
+                    registro_demo["metadatos_clinicos"] = "Caso de Estudio Pre-cargado CPSC-2018"
+                    
+                    st.session_state["paciente_activo"] = registro_demo
                     st.session_state["datos_preprocesados"] = None 
-                    st.success(mensaje)
+                    st.success(f"¡Éxito! {demo_seleccionado} cargado correctamente en memoria RAM.")
                 else:
-                    st.error(mensaje)
+                    st.error("Error crítico: No se encontraron los archivos de ejemplo en la carpeta 'data/examples/'. Por favor verifique el repositorio de GitHub.")
+
+
+
+
+
+
+
+
+
 
     if st.session_state["paciente_activo"] is not None:
         st.markdown("---")
@@ -120,6 +182,12 @@ if menu_opcion == "1. Carga de Señal":
                 graficar_derivacion_ecg(paciente, derivacion_activa)
         else:
             st.warning("Seleccione al menos una derivación de la matriz superior para desplegar su análisis gráfico.")
+
+
+
+
+
+
 
 # ==============================================================================
 # PANTALLA 2: MODULO DE PREPROCESAMIENTO DE SEÑALES

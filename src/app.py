@@ -97,13 +97,48 @@ if st.session_state["paciente_activo"] is not None:
     st.markdown("---")
     st.subheader("📈 Visualización Interactiva")
     
-    derivacion_seleccionada = st.selectbox(
-        "Seleccione la derivación electrocardiográfica a graficar de la matriz anterior:", 
-        paciente["derivaciones"],
-        index=1
-    )
+
+
+
+
+    st.markdown("---")
+    st.subheader("📈 Visualización Interactiva Multiderivación")
+    st.write("Seleccione las derivaciones electrocardiográficas que desea inspeccionar en paralelo:")
     
-    st.warning(f"Estructura lista. Esperando confirmación para renderizar la onda de la derivación {derivacion_seleccionada}...")
+    # 1. DISEÑO DE LA MATRIZ DE CHECKBOXS (Distribuidos en 6 columnas estéticas)
+    # Creamos un contenedor de columnas para que los checkboxs no se desparramen hacia abajo
+    cols_check = st.columns(6)
+    derivaciones_seleccionadas = []
+    
+    # Iteramos sobre las 12 derivaciones del paciente y las repartimos en las 6 columnas
+    for idx, derivacion in enumerate(paciente["derivaciones"]):
+        col_actual = cols_check[idx % 6] # Distribución matemática uniforme (2 por columna)
+        with col_actual:
+            # st.checkbox devuelve True si está marcado. Inicialmente seteado en False.
+            if st.checkbox(f"Derivación {derivacion}", value=False, key=f"chk_{derivacion}"):
+                derivaciones_seleccionadas.append(derivacion)
+                
+    # 2. RENDERIZADO REACTIVO DE GRÁFICOS (Abajo de la matriz)
+    if derivaciones_seleccionadas:
+        st.markdown("###") # Pequeño espacio de separación
+        
+        # Iteramos únicamente sobre los canales que el usuario activó
+        for derivacion_activa in derivaciones_seleccionadas:
+            
+            # --- AQUÍ INVOCAREMOS PRÓXIMAMENTE LA FUNCIÓN GRÁFICA REAL DE Plotly ---
+            # Por ahora, dejamos un contenedor visual informativo por cada canal seleccionado
+            st.info(f"📈 [Espacio Reservado] Renderizando la señal en tiempo real para la **Derivación {derivacion_activa}**...")
+            
+    else:
+        # Mensaje informativo si el usuario desmarcó todo
+        st.warning("Seleccione al menos una derivación de la matriz superior para desplegar su análisis gráfico.")
+
+
+
+
+
+
+
 
 # 3. INYECCIÓN DE CÓDIGO CSS
 st.markdown(
@@ -132,3 +167,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+

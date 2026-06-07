@@ -64,7 +64,8 @@ def graficar_comparativa_preprocesamiento(tiempo_crudo, senal_cruda, tiempo_proc
             y=senal_cruda[idx_inicio_crudo:idx_fin_crudo],
             mode='lines',
             name=f'ECG Crudo Original ({fs_original} Hz)',
-            line=dict(color='#FCA5A5', width=1.1)
+            #line=dict(color='#FCA5A5', width=1.1)
+            line=dict(color='#E53E3E', width=1.5, dash='dot') 
         ),
         secondary_y=False
     )

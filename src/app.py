@@ -24,14 +24,26 @@ if "resultados_inferencia" not in st.session_state:
     st.session_state["resultados_inferencia"] = None
 
 # 3. INTERFAZ DE USUARIO: BARRA LATERAL (INFORMACIÓN INSTITUCIONAL FIJA)
+# 3. INTERFAZ DE USUARIO: BARRA LATERAL (ESTRUCTURA VERTICAL ANTI-RECORTES)
 with st.sidebar:
     st.title("🩺 AFibDetect v1.0")
     st.markdown("---")
-    st.markdown("**Modelo en cascada para la clasificación de AFib, NSR, Others y Noise.**")
+    st.markdown("**Modelo en cascada para la clasificacion de AFib, NSR, Others y Noise.**")
     st.markdown("---")
-    st.caption("👨‍⚕️ **Investigador:** Edgard Oporto")
-    st.caption("🏫 **Institución:** UNMSM FISI 2026")
-    st.caption("🎓 **Grado:** Doctorado en Ingeniería de Sistemas e Informática")
+    
+    # Usamos dobles saltos de linea para que lo que sigue se coloque justo debajo de cada item
+    st.markdown("👨‍⚕️ **Investigador**\n\nEdgard Oporto")
+    st.markdown("###") # Pequeño espacio de separacion estetico
+    
+    st.markdown("🏫 **Institucion**\n\nUNMSM FISI 2026")
+    st.markdown("###")
+    
+    st.markdown("🎓 **Grado Academico**\n\nDoctorado en Ingenieria de Sistemas e Informatica")
+
+
+
+
+
 
 def traducir_codigo_snomed(codigo_crudo):
     codigo_str = str(codigo_crudo).strip()

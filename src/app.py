@@ -88,8 +88,8 @@ if menu_opcion == "1. Carga de Señal":
                 "Caso 2: Ritmo Sinusal Normal (NSR - Registro A4790)",
                 "Caso 3: Fibrilación Auricular (AF - Registro A3561)",
                 "Caso 4: Fibrilación Auricular (AF - Registro A6850)",
-                "Caso 5: Bloqueo de Rama / Otras Arritmias (Other - Registro A2020)",
-                "Caso 6: Bloqueo de Rama / Otras Arritmias (Other - Registro A5618)"
+                "Caso 5: Otras Arritmias (Other - Registro A2020)",
+                "Caso 6: Otras Arritmias (Other - Registro A5618)"
             ]
         )
         
@@ -98,8 +98,8 @@ if menu_opcion == "1. Carga de Señal":
             "Caso 2: Ritmo Sinusal Normal (NSR - Registro A4790)": "A4790_NSR",
             "Caso 3: Fibrilación Auricular (AF - Registro A3561)": "A3561_AF",
             "Caso 4: Fibrilación Auricular (AF - Registro A6850)": "A6850_AF",
-            "Caso 5: Bloqueo de Rama / Otras Arritmias (Other - Registro A2020)": "A2020_Others",
-            "Caso 6: Bloqueo de Rama / Otras Arritmias (Other - Registro A5618)": "A5618_Others"
+            "Caso 5: Otras Arritmias (Other - Registro A2020)": "A2020_Others",
+            "Caso 6: Otras Arritmias (Other - Registro A5618)": "A5618_Others"
         }
         
         if st.button("🚀 Inicializar Caso de Estudio Seleccionado", type="secondary"):

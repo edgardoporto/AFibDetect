@@ -29,7 +29,7 @@ if "resultados_inferencia" not in st.session_state:
 with st.sidebar:
     st.title("🩺 AFibDetect v1.0")
     st.markdown("---")
-    st.markdown("**Modelo en cascada para la clasificacion de AFib, NSR, Others y Noise.**")
+    st.markdown("**Modelo en cascada para la clasificación de AFib, NSR, Others y Noise.**")
     st.markdown("---")
     
     # El uso de <br> fuerza el salto abajo exacto sin abrir un párrafo gigante
@@ -337,6 +337,7 @@ with tab3:
 # 5. INYECCIÓN DE CÓDIGO CSS (Fijación de Pestañas Sticky y Corrección de Recorte)
 st.markdown(
     """
+
     <style>
         /* 1. Ajuste del contenedor principal para eliminar el recorte superior de raíz */
         .block-container { 
@@ -361,19 +362,25 @@ st.markdown(
             font-size: 0.95rem !important; 
         }
         
-        /* 3. CONVERSIÓN A PESTAÑAS STICKY FIJAS (El secreto del éxito) */
-        /* Detectamos la clase nativa que usa Streamlit para agrupar los botones de las pestañas */
+        /* 3. CONVERSIÓN A PESTAÑAS STICKY FIJAS */
         div[data-testid="stTabs"] {
-            position: -webkit-sticky !important; /* Compatibilidad con Safari */
+            position: -webkit-sticky !important; 
             position: sticky !important;
-            top: 2.85rem !important; /* Altura de la barra superior gris de Streamlit */
-            z-index: 999999 !important; /* Forzamos a que flote por encima de cualquier gráfico de Plotly */
-            background-color: #ffffff !important; /* Fondo blanco sólido para que las curvas no se traslapan por detrás */
+            top: 2.85rem !important; 
+            z-index: 999999 !important; 
+            background-color: #ffffff !important; 
             padding-top: 0.5rem !important;
             padding-bottom: 0.5rem !important;
-            border-bottom: 1px solid #e2e8f0 !important; /* Línea divisoria sutil elegante */
+            border-bottom: 1px solid #e2e8f0 !important; 
+        }
+
+        /* 4. MEJORA VISUAL DE LAS PESTAÑAS: Más grandes y con mayor resalte */
+        div[data-testid="stTabs"] button p {
+            font-size: 1.15rem !important; /* Aumentamos el tamaño de la fuente un 20% */
+            font-weight: 600 !important;    /* Hacemos el texto seminegrita para que resalte */
         }
     </style>
+
     """,
     unsafe_allow_html=True
 )

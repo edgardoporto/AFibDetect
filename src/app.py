@@ -9,6 +9,11 @@ from modules.preprocessor import ejecutar_pipeline_preprocesamiento
 from modules.inference import ejecutar_inferencia_segmentos
 from modules.dashboard import graficar_derivacion_ecg, graficar_comparativa_preprocesamiento, graficar_ecg_coloreado_por_clase
 
+# Importaciones de cargadores biomédicos unificadas en el encabezado global
+from modules.data_loader import cargar_registro_unico_wfdb, cargar_registro_ejemplo_interno
+from modules.dashboard import graficar_derivacion_ecg, graficar_comparativa_preprocesamiento, graficar_ecg_coloreado_por_clase
+
+
 
 # Inicialización y configuración del Layout
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")
@@ -87,29 +92,37 @@ if menu_opcion == "1. Carga de Señal":
                         st.error(mensaje)
                         
     # --- CASO B: EL USUARIO ELIGE UN EJEMPLO DE LA BASE DE DATOS INTERNA ---
+    # --- CASO B: EL USUARIO ELIGE UN EJEMPLO DE LA BASE DE DATOS INTERNA ---
     else:
-        st.write("Seleccione uno de los casos reales pre-cargados en el servidor para auditar el pipeline:")
+        st.write("Seleccione uno de los 6 casos reales pre-cargados en el servidor para auditar el sistema:")
+        
+        # Registramos las opciones visuales con tus códigos reales de archivo
         demo_seleccionado = st.selectbox(
             "Casos de Estudio Disponibles:",
             [
-                "Caso 1: Ritmo Sinusal Normal de Referencia (NSR)",
-                "Caso 2: Episodio Aguto de Fibrilación Auricular (AF)",
-                "Caso 3: Patología de Bloqueo de Rama Derecha (Other - RBBB)"
+                "Caso 1: Ritmo Sinusal Normal (NSR - Registro A2225)",
+                "Caso 2: Ritmo Sinusal Normal (NSR - Registro A4790)",
+                "Caso 3: Fibrilación Auricular (AF - Registro A3561)",
+                "Caso 4: Fibrilación Auricular (AF - Registro A6850)",
+                "Caso 5: Bloqueo de Rama / Otras Arritmias (Other - Registro A2020)",
+                "Caso 6: Bloqueo de Rama / Otras Arritmias (Other - Registro A5618)"
             ]
         )
         
-        # Mapeamos la selección de la GUI con los nombres reales de los archivos en disco
+        # Mapeamos cada opción de la pantalla con el nombre físico exacto de tu archivo en disco
         mapa_demos = {
-            "Caso 1: Ritmo Sinusal Normal de Referencia (NSR)": "ejemplo_NSR",
-            "Caso 2: Episodio Aguto de Fibrilación Auricular (AF)": "ejemplo_AF",
-            "Caso 3: Patología de Bloqueo de Rama Derecha (Other - RBBB)": "ejemplo_RBBB"
+            "Caso 1: Ritmo Sinusal Normal (NSR - Registro A2225)": "A2225_NSR",
+            "Caso 2: Ritmo Sinusal Normal (NSR - Registro A4790)": "A4790_NSR",
+            "Caso 3: Fibrilación Auricular (AF - Registro A3561)": "A3561_AF",
+            "Caso 4: Fibrilación Auricular (AF - Registro A6850)": "A6850_AF",
+            "Caso 5: Bloqueo de Rama / Otras Arritmias (Other - Registro A2020)": "A2020_Others",
+            "Caso 6: Bloqueo de Rama / Otras Arritmias (Other - Registro A5618)": "A5618_Others"
         }
         
-        # Botón de carga instantánea
+        # Botón de acción para inicializar la carga desde disco interno
         if st.button("🚀 Inicializar Caso de Estudio Seleccionado", type="secondary"):
-            with st.spinner("Cargando registro clínico desde el repositorio interno..."):
-                from modules.data_loader import cargar_registro_ejemplo_interno
-                
+            with st.spinner("Cargando matriz clínica desde el repositorio interno..."):
+                # Eliminamos la línea conflictiva de importación local que causaba el ImportError
                 archivo_base = mapa_demos[demo_seleccionado]
                 registro_demo = cargar_registro_ejemplo_interno(archivo_base)
                 
@@ -117,6 +130,7 @@ if menu_opcion == "1. Carga de Señal":
                     registro_demo["etiqueta_referencia"] = traducir_codigo_snomed(registro_demo["codigo_snomed"])
                     registro_demo["resolución_adc"] = "16-bit"
                     registro_demo["ganancia_base"] = "1000 adu/mV"
+                    registro_real = registro_demo # Asegura compatibilidad interna
                     registro_demo["formato_almacenamiento"] = "Matlab v4 (Format 16)"
                     registro_demo["metadatos_clinicos"] = "Caso de Estudio Pre-cargado CPSC-2018"
                     
@@ -124,9 +138,7 @@ if menu_opcion == "1. Carga de Señal":
                     st.session_state["datos_preprocesados"] = None 
                     st.success(f"¡Éxito! {demo_seleccionado} cargado correctamente en memoria RAM.")
                 else:
-                    st.error("Error crítico: No se encontraron los archivos de ejemplo en la carpeta 'data/examples/'. Por favor verifique el repositorio de GitHub.")
-
-
+                    st.error(f"Error crítico: No se encontró el archivo '{archivo_base}' en la carpeta 'data/examples/'. Verifique el nombre en GitHub.")
 
 
 

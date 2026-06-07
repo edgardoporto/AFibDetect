@@ -39,21 +39,22 @@ def cargar_registro_unico_wfdb(archivos_subidos):
 
 
 
+
+
 def cargar_registro_ejemplo_interno(nombre_archivo_base):
     """
-    Lee un registro de demostración guardado físicamente en la carpeta de ejemplos
-    del repositorio del servidor.
-    - nombre_archivo_base: 'ejemplo_NSR', 'ejemplo_AF' o 'ejemplo_RBBB'
+    Lee un registro de demostración real de la CPSC-2018 guardado físicamente 
+    en la carpeta 'data/examples/' del repositorio del servidor.
     """
     from modules.reader_cpsc2018 import leer_registro_cpsc2018
     import os
     
-    # Construimos la ruta hacia la carpeta interna del servidor
+    # Construimos la ruta absoluta hacia tu carpeta de ejemplos
     current_dir = os.path.dirname(os.path.abspath(__file__))
     ruta_ejemplos = os.path.abspath(os.path.join(current_dir, "..", "..", "data", "examples"))
     ruta_absoluta = os.path.join(ruta_ejemplos, nombre_archivo_base)
     
-    # Validamos que los archivos existan físicamente en el servidor antes de leer
+    # Validamos físicamente la existencia de las extensiones gemelas
     if os.path.exists(ruta_absoluta + ".hea") and os.path.exists(ruta_absoluta + ".mat"):
         return leer_registro_cpsc2018(ruta_absoluta)
     return None

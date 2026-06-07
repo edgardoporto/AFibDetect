@@ -287,24 +287,31 @@ elif menu_opcion == "3. Inferencia y Dashboard":
             
 
             # --- NUEVO COMPONENTE: BOTÓN DE DESCARGA DE REPORTE INTEGRADO PDF ---
+            # --- COMPONENTE DE DESCARGA DE REPORTE INTEGRADO PDF (CORREGIDO) ---
             st.markdown("###")
             
-            # Compilamos dinámicamente el PDF llamando a nuestro generador en memoria RAM
-            bytes_pdf = generar_pdf_clinico(
+            # Generamos los bytes base utilizando el motor de report_generator
+            bytes_pdf_crudos = generar_pdf_clinico(
                 paciente=paciente,
                 proc=proc,
                 resultados_inferencia=st.session_state["resultados_inferencia"]
             )
             
-            # Botón de descarga de Streamlit: Guarda el archivo directo en la PC del usuario
+            # SOLUCIÓN DE SOFTWARE: Convertimos explícitamente el objeto fpdf2 a bytes puros de Python
+            bytes_pdf_finales = bytes(bytes_pdf_crudos)
+            
+            # Botón de descarga con inyección de tipos nativos estables
             st.download_button(
                 label="📥 Descargar Reporte Clínico Formal (PDF)",
-                data=bytes_pdf,
+                data=bytes_pdf_finales, # <-- Inyectamos el vector de bytes convertido
                 file_name=f"Reporte_AFibDetect_Registro_{paciente['id_registro']}.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
-            # ------------------------------------------------------
+            # ---------------------------------------------------------------------
+
+
+
 
 
 

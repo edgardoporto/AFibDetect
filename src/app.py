@@ -1,6 +1,6 @@
 import streamlit as st
 # Importamos la tabla de códigos desde tu archivo de configuración
-from src.config import SNOMED_MAP
+from config import SNOMED_MAP
 
 # Inicialización y configuración del Layout
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")

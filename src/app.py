@@ -1,4 +1,6 @@
 import streamlit as st
+# Importamos la tabla de códigos desde tu archivo de configuración
+from src.config import SNOMED_MAP
 
 # Inicialización y configuración del Layout
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")
@@ -13,21 +15,43 @@ st.write("Cargue los archivos de un registro de la CPSC-2018 (Arrastre juntos el
 
 # 1. COMPONENTE DE CARGA DE ARCHIVOS (.hea y .mat)
 archivos_subidos = st.file_uploader(
-    "Seleccione o arrastre juntos los archivos .hea y .mat del registro:", 
+    "Seleccione o arrastre juntos los archivos .hea y .dat del registro:", 
     type=["hea", "mat"],
     accept_multiple_files=True
 )
 
-# Simulador de datos expandido con TODOS los metadatos de PhysioNet
+def traducir_codigo_snomed(codigo_crudo):
+    """
+    Traduce el código SNOMED de PhysioNet al estándar del proyecto.
+    Si no es AF ni NSR, lo encapsula como 'Other (Nombre_Real)'.
+    """
+    codigo_str = str(codigo_crudo).strip()
+    
+    if codigo_str in SNOMED_MAP:
+        nombre_real = SNOMED_MAP[codigo_str]
+        if nombre_real in ["AF", "NSR", "Noise"]:
+            return nombre_real
+        else:
+            return f"Other ({nombre_real})"
+    else:
+        return "Other (Unknown)"
+
+# Simulador de datos de PhysioNet modificado con códigos reales
 if archivos_subidos and len(archivos_subidos) == 2:
     if st.session_state["paciente_activo"] is None:
+        # Simulamos que leímos el código "59118001" (RBBB) de la cabecera .hea
+        codigo_snomed_detectado = "59118001" 
+        
+        # El traductor procesará dinámicamente la etiqueta según tu requerimiento
+        etiqueta_procesada = traducir_codigo_snomed(codigo_snomed_detectado)
+        
         st.session_state["paciente_activo"] = {
             "id_registro": "A0001.mat",
             "frecuencia_muestreo": 300,
             "total_muestras": 15000,
             "num_derivaciones": 12,
             "derivaciones": ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"],
-            "etiqueta_referencia": "AF (Atrial Fibrillation)",
+            "etiqueta_referencia": etiqueta_procesada,  # <--- GUARDADO CON EL NUEVO FORMATO
             "resolución_adc": "16-bit",
             "ganancia_base": "1000 adu/mV",
             "formato_almacenamiento": "Matlab v4 (Format 16)",
@@ -54,8 +78,8 @@ if st.session_state["paciente_activo"] is not None:
     with col4:
         st.metric(label="Diagnóstico de Referencia", value=paciente["etiqueta_referencia"])
         
-    # Fila 2: Información Técnica del Archivo y Canales (Estructura corregida)
-    st.markdown("###") # Pequeño espacio de separación
+    # Fila 2: Información Técnica del Archivo y Canales
+    st.markdown("###") 
     col_tech1, col_tech2, col_tech3 = st.columns(3)
     
     with col_tech1:
@@ -66,25 +90,22 @@ if st.session_state["paciente_activo"] is not None:
         
     with col_tech3:
         st.info(f"**Formato de Almacenamiento:**\n\n* **Módulo Lector:** {paciente['formato_almacenamiento']}\n* **Datos Clínicos:** {paciente['metadatos_clinicos']}")
-    
 
-    # Despliegue explícito del mapa de derivaciones presentes
     st.markdown("**Matriz de Canales Detectados:**")
     st.code(" | ".join(paciente["derivaciones"]), language="text")
 
     st.markdown("---")
     st.subheader("📈 Visualización Interactiva")
     
-    # Selector de derivación acoplado al mapa de canales
     derivacion_seleccionada = st.selectbox(
         "Seleccione la derivación electrocardiográfica a graficar de la matriz anterior:", 
         paciente["derivaciones"],
-        index=1  # Preselecciona la derivación II
+        index=1
     )
     
     st.warning(f"Estructura lista. Esperando confirmación para renderizar la onda de la derivación {derivacion_seleccionada}...")
 
-# 3. INYECCIÓN DE CÓDIGO CSS (Márgenes y Fuentes)
+# 3. INYECCIÓN DE CÓDIGO CSS
 st.markdown(
     """
     <style>

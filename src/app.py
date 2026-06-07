@@ -1,13 +1,15 @@
 import streamlit as st
+import numpy as np
+
 # Importamos la tabla de códigos desde tu archivo de configuración
 from config import SNOMED_MAP
 # Importación del módulo gráfico corregido
 from modules.dashboard import graficar_derivacion_ecg
+# IMPORTACIÓN DEL CARGADOR BIOMÉDICO REAL DE PHYSIONET
+from modules.data_loader import cargar_registro_unico_wfdb
 
 # Inicialización y configuración del Layout
 st.set_page_config(page_title="AFibDetect System", page_icon="🩺", layout="wide")
-
-
 
 # Inicializamos el estado para almacenar un solo paciente de CPSC-2018
 if "paciente_activo" not in st.session_state:
@@ -19,7 +21,7 @@ st.write("Cargue los archivos de un registro de la CPSC-2018 (Arrastre juntos el
 
 # 1. COMPONENTE DE CARGA DE ARCHIVOS (.hea y .mat)
 archivos_subidos = st.file_uploader(
-    "Seleccione o arrastre juntos los archivos .hea y .dat del registro:", 
+    "Seleccione o arrastre juntos los archivos .hea y .mat del registro:", 
     type=["hea", "mat"],
     accept_multiple_files=True
 )
@@ -40,56 +42,29 @@ def traducir_codigo_snomed(codigo_crudo):
     else:
         return "Other (Unknown)"
 
-# Simulador de datos de PhysioNet modificado con códigos reales
-import numpy as np # Asegúrate de tener este import al inicio del archivo si no estaba
-
-# Simulador de datos de PhysioNet modificado con curvas numéricas de prueba
+# 2. PROCESAMIENTO Y PARSEO DE SEÑALES REALES DESDE EL BUS BUFFER
 if archivos_subidos and len(archivos_subidos) == 2:
     if st.session_state["paciente_activo"] is None:
-        codigo_snomed_detectado = "59118001" 
-        etiqueta_procesada = traducir_codigo_snomed(codigo_snomed_detectado)
-        
-        # --- NUEVO: Generamos señales de prueba para las 12 derivaciones ---
-        # Creamos una matriz de 12 filas (canales) por 15,000 puntos (muestras)
-        fs_simulada = 300
-        puntos_totales = 15000
-        tiempo_vector = np.arange(puntos_totales) / fs_simulada
-        
-        # Creamos una onda base que simule variaciones de voltaje de ECG
-        matriz_senales = []
-        for i in range(12):
-            # Cada derivación tendrá una frecuencia ligeramente desfasada para simular morfologías distintas
-            onda_base = 0.5 * np.sin(2 * np.pi * 1.2 * tiempo_vector + i) 
-            # Añadimos un pequeño componente que simule el complejo QRS (picos de voltaje periódicos)
-            picos_qrs = 1.5 * (np.abs(np.sin(2 * np.pi * 1.0 * tiempo_vector + i)) > 0.96)
-            ruido_blanco = 0.05 * np.random.normal(0, 1, puntos_totales)
+        with st.spinner("Parseando matriz binaria de Matlab en memoria RAM..."):
+            # Llamamos al cargador real que guarda los archivos por un milisegundo en disco temporal
+            registro_real, mensaje = cargar_registro_unico_wfdb(archivos_subidos)
             
-            matriz_senales.append(onda_base + picos_qrs + ruido_blanco)
-            
-        matriz_final = np.array(matriz_senales)
-        # ------------------------------------------------------------------
-        
-        st.session_state["paciente_activo"] = {
-            "id_registro": "A0001.mat",
-            "frecuencia_muestreo": fs_simulada,
-            "total_muestras": puntos_totales,
-            "num_derivaciones": 12,
-            "derivaciones": ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"],
-            "senal_cruda": matriz_final, # <-- INYECTAMOS LA MATRIZ DE VOLTAJE REAL EN MEMORIA
-            "etiqueta_referencia": etiqueta_procesada,
-            "resolución_adc": "16-bit",
-            "ganancia_base": "1000 adu/mV",
-            "formato_almacenamiento": "Matlab v4 (Format 16)",
-            "metadatos_clinicos": "Edad: 68 | Sexo: Masculino | Tipo: Registro Clínico Estándar"
-        }
-        st.success("Validación e ingesta biomédica completada con éxito.")
+            if registro_real:
+                # Traducimos dinámicamente el código SNOMED extraído de la cabecera real
+                registro_real["etiqueta_referencia"] = traducir_codigo_snomed(registro_real["codigo_snomed"])
+                
+                # Campos complementarios estéticos fijos requeridos por tu interfaz
+                registro_real["resolución_adc"] = "16-bit"
+                registro_real["ganancia_base"] = "1000 adu/mV"
+                registro_real["formato_almacenamiento"] = "Matlab v4 (Format 16)"
+                registro_real["metadatos_clinicos"] = "Registro Clínico CPSC-2018"
+                
+                st.session_state["paciente_activo"] = registro_real
+                st.success(mensaje)
+            else:
+                st.error(mensaje)
 
-
-
-
-
-
-# 2. DESPLIEGUE EXHAUSTIVO DE TODOS LOS METADATOS
+# 3. DESPLIEGUE EXHAUSTIVO DE TODOS LOS METADATOS CLÍNICOS
 if st.session_state["paciente_activo"] is not None:
     st.markdown("---")
     st.subheader("📊 Panel Integral de Metadatos (Estándar PhysioNet)")
@@ -125,49 +100,29 @@ if st.session_state["paciente_activo"] is not None:
     st.code(" | ".join(paciente["derivaciones"]), language="text")
 
     st.markdown("---")
-    st.subheader("📈 Visualización Interactiva")
-    
-
-
-
-
-    st.markdown("---")
     st.subheader("📈 Visualización Interactiva Multiderivación")
     st.write("Seleccione los canales electrocardiográficos que desea inspeccionar en paralelo:")
     
-    # 1. DISEÑO DE LA MATRIZ COMPACTA (Solo las siglas de los canales)
+    # 4. DISEÑO DE LA MATRIZ COMPACTA DE CHECKBOXES (6 Columnas)
     cols_check = st.columns(6)
     derivaciones_seleccionadas = []
     
     for idx, derivacion in enumerate(paciente["derivaciones"]):
         col_actual = cols_check[idx % 6]
         with col_actual:
-            # CORRECCIÓN: Eliminamos la palabra 'Derivación ' del texto visual para mayor compacidad
             if st.checkbox(derivacion, value=False, key=f"chk_{derivacion}"):
                 derivaciones_seleccionadas.append(derivacion)
-
                 
-    # 2. RENDERIZADO REACTIVO DE GRÁFICOS (Abajo de la matriz)
+    # 5. RENDERIZADO REACTIVO DE GRÁFICOS REALES DE PLOTLY
     if derivaciones_seleccionadas:
         st.markdown("###") # Pequeño espacio de separación
-        
-        # Iteramos únicamente sobre los canales que el usuario activó
         for derivacion_activa in derivaciones_seleccionadas:
-            # CORRECCIÓN DEFINITIVA: Llamamos a Plotly pasando el paciente y el canal
+            # Llamamos a Plotly pasando la matriz de voltajes del paciente real
             graficar_derivacion_ecg(paciente, derivacion_activa)
-            
     else:
         st.warning("Seleccione al menos una derivación de la matriz superior para desplegar su análisis gráfico.")
 
-
-
-
-
-
-
-
-
-# 3. INYECCIÓN DE CÓDIGO CSS
+# 6. INYECCIÓN DE CÓDIGO CSS (Control estético de fuentes y márgenes)
 st.markdown(
     """
     <style>
@@ -194,5 +149,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-

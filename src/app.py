@@ -149,7 +149,7 @@ with tab1:
 
     if st.session_state["paciente_activo"] is not None:
         st.markdown("---")
-        st.subheader("📊 Panel Integral de Metadatos (Estándar PhysioNet)")
+        st.subheader("📊 Panel de Metadatos")
         
         paciente = st.session_state["paciente_activo"]
         duracion_segundos = paciente["total_muestras"] / paciente["frecuencia_muestreo"]
@@ -173,7 +173,7 @@ with tab1:
         with col_tech3:
             st.info(f"**Formato de Almacenamiento:**\n\n* **Módulo Lector:** {paciente['formato_almacenamiento']}\n* **Datos Clínicos:** {paciente['metadatos_clinicos']}")
 
-        st.markdown("**Matriz de Canales Detectados:**")
+        st.markdown("**Derivaciones disponibles**")
         st.code(" | ".join(paciente["derivaciones"]), language="text")
 
         st.markdown("---")

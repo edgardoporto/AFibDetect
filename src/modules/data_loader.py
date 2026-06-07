@@ -43,24 +43,25 @@ def cargar_registro_unico_wfdb(archivos_subidos):
 
 
 
+
+
 def cargar_registro_ejemplo_interno(nombre_archivo_base):
     """
-    Lee un registro de demostración real de la CPSC-2018 guardado físicamente 
-    en la carpeta 'data/examples/' usando rutas relativas robustas para Linux.
+    Lee un registro de demostración real de la CPSC-2018 usando el
+    directorio de ejecución absoluto del servidor (CWD).
     """
     from modules.reader_cpsc2018 import leer_registro_cpsc2018
     import os
     
-    # 1. Determinamos la raíz real del proyecto subiendo dos niveles desde 'modules/'
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.abspath(os.path.join(current_dir, "..", ".."))
+    # Usamos la ruta raíz oficial del servidor que auditamos en la consola
+    ruta_base_proyecto = os.getcwd()
     
-    # 2. Construimos la ruta exacta apuntando a la carpeta de ejemplos
-    # Esto le permite a wfdb encontrar el archivo en el contenedor virtual de Streamlit Cloud
-    ruta_absoluta = os.path.join(project_root, "data", "examples", nombre_archivo_base)
+    # Construimos la ruta absoluta limpia y compatible para Linux y Windows
+    ruta_absoluta = os.path.join(ruta_base_proyecto, "data", "examples", nombre_archivo_base)
     
-    # 3. Validamos la existencia física antes de llamar al lector de Matlab
-    if os.path.exists(ruta_absoluta + ".hea") or os.path.exists(ruta_absoluta + ".HEA"):
+    # Validamos la existencia física de la cabecera antes de alimentar a wfdb
+    if os.path.exists(ruta_absoluta + ".hea"):
         return leer_registro_cpsc2018(ruta_absoluta)
         
     return None
+

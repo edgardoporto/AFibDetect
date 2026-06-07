@@ -141,7 +141,7 @@ if menu_opcion == "1. Carga de Señal":
                     st.error(f"Error crítico: No se encontró el archivo '{archivo_base}' en la carpeta 'data/examples/'. Verifique el nombre en GitHub.")
 
                     # --- BLOQUE DE AUDITORÍA TEMPORAL (Borrar una vez solucionado) ---
-                    st.markdown("---")
+"""                     st.markdown("---")
                     st.markdown("### 🔍 Consola de Diagnóstico de Rutas en el Servidor")
                     import os
                     
@@ -164,7 +164,7 @@ if menu_opcion == "1. Carga de Señal":
                         ruta_test = os.path.join(root_dir, "data", "examples")
                         st.write(f"**¿Existe la ruta 'data/examples'?:** `{os.path.exists(ruta_test)}`")
                         if os.path.exists(ruta_test):
-                            st.write("**Archivos físicos detectados en 'data/examples':**", os.listdir(ruta_test))
+                            st.write("**Archivos físicos detectados en 'data/examples':**", os.listdir(ruta_test)) """
                     # -----------------------------------------------------------------
 
 

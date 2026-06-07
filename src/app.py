@@ -140,7 +140,32 @@ if menu_opcion == "1. Carga de Señal":
                 else:
                     st.error(f"Error crítico: No se encontró el archivo '{archivo_base}' en la carpeta 'data/examples/'. Verifique el nombre en GitHub.")
 
-
+                    # --- BLOQUE DE AUDITORÍA TEMPORAL (Borrar una vez solucionado) ---
+                    st.markdown("---")
+                    st.markdown("### 🔍 Consola de Diagnóstico de Rutas en el Servidor")
+                    import os
+                    
+                    # Analizamos el directorio actual de ejecución de Streamlit
+                    cwd = os.getcwd()
+                    st.write(f"**Directorio de trabajo actual (CWD):** `{cwd}`")
+                    st.write("**Contenido del CWD:**", os.listdir(cwd))
+                    
+                    # Buscamos la ubicación del script app.py
+                    app_dir = os.path.dirname(os.path.abspath(__file__))
+                    st.write(f"**Ubicación de app.py:** `{app_dir}`")
+                    
+                    # Intentamos listar la carpeta raíz subiendo un nivel
+                    root_dir = os.path.abspath(os.path.join(app_dir, ".."))
+                    st.write(f"**Raíz detectada:** `{root_dir}`")
+                    if os.path.exists(root_dir):
+                        st.write("**Contenido de la raíz:**", os.listdir(root_dir))
+                        
+                        # Verificamos si existe la carpeta data/examples
+                        ruta_test = os.path.join(root_dir, "data", "examples")
+                        st.write(f"**¿Existe la ruta 'data/examples'?:** `{os.path.exists(ruta_test)}`")
+                        if os.path.exists(ruta_test):
+                            st.write("**Archivos físicos detectados en 'data/examples':**", os.listdir(ruta_test))
+                    # -----------------------------------------------------------------
 
 
 

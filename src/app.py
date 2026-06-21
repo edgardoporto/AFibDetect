@@ -27,10 +27,10 @@ if "resultados_inferencia" not in st.session_state:
 
 # 3. INTERFAZ DE USUARIO: BARRA LATERAL (CONTROL DE SALTO HTML COMPACTO)
 with st.sidebar:
-    st.image("images/logo.jpg")
+    st.image("images/logo2.jpg")
     st.title("Versión 1.0")
     st.markdown("---")
-    st.markdown("**Modelo en cascada para la clasificación de AFib, NSR, Others y Noise.**")
+    st.markdown("**Modelo en cascada para la clasificación de AFib, NSR, Others y Noise**")
     st.markdown("---")
     
     # El uso de <br> fuerza el salto abajo exacto sin abrir un párrafo gigante

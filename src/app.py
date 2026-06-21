@@ -27,6 +27,7 @@ if "resultados_inferencia" not in st.session_state:
 
 # 3. INTERFAZ DE USUARIO: BARRA LATERAL (CONTROL DE SALTO HTML COMPACTO)
 with st.sidebar:
+    st.image("images/logo.jpg")
     st.title("🩺 AFibDetect v1.0")
     st.markdown("---")
     st.markdown("**Modelo en cascada para la clasificación de AFib, NSR, Others y Noise.**")
